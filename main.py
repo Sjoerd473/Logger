@@ -1,0 +1,200 @@
+import tkinter as tk
+from imaplib import Commands
+from tkinter import ttk
+from tkinter.constants import HORIZONTAL
+
+from modules.db import LoggerDB
+from modules.file_writer import print_to_file, refresh_file
+from modules.row_writer import Add_row
+
+dsn = "dbname=logger user=postgres password=megablaat"
+
+new_row = Add_row()
+db = LoggerDB(dsn)
+
+
+# niente frutta secca/nocciole
+#
+#
+# , check for unique on names,
+#  error handling, add a clock to the timer, layout sizing and positioning,
+#
+
+
+def start_timer(): ...
+
+
+def refresh_listbox(cat, project=""):
+    if cat == "p":
+        projects = db.get_projects()
+        p_var.set(projects)
+    elif cat == "s":
+        subs = db.get_subs(project)
+        s_var.set(subs)
+
+
+def get_project_name_from_list():
+    p_selection = p_list.curselection()
+
+    if p_selection:
+        p_name = p_list.get(p_selection[0])
+        return p_name[0]
+
+
+def get_subproject_name_from_list():
+    selection = s_list.curselection()
+
+    if selection:
+        s_name = s_list.get([selection[0]])
+        return s_name[0]
+
+
+def add_project():
+    p_name = pe_ety.get()
+    pe_ety.delete(0, tk.END)
+    print(p_name)
+    db.post_project(p_name)
+    refresh_listbox("p")
+
+
+def add_subproject():
+    p_name = get_project_name_from_list()
+
+    if p_name:
+        s_name = se_ety.get()
+        se_ety.delete(0, tk.END)
+        db.post_sub(s_name, p_name)
+
+        refresh_listbox("s", p_name)
+
+
+def update_subprojects(event):
+    p_name = get_project_name_from_list()
+
+    if p_name:
+        new_subs = db.get_subs(p_name)
+
+        s_var.set(new_subs)
+
+
+def update_payment(event):
+    s_name = get_subproject_name_from_list()
+
+    if s_name:
+        hourly_rate = db.get_hourly(s_name)
+
+        resultsContent.set(f"{hourly_rate[0][0]}€")
+
+
+def alter_payment():
+    s_name = get_subproject_name_from_list()
+
+    if s_name:
+        n = b_ety.get()
+        b_ety.delete(0, tk.END)
+        db.update_hourly(n, s_name)
+
+        refresh_file(db.get_file_data())
+        update_payment("")
+
+
+def open_timer(project, subproject):
+    timer_window = tk.Toplevel(root)
+
+    def update_timer_txt(): ...
+
+    def stop_timer():
+        timer_window.destroy()
+        new_row.end_logger()
+        db.post_log(new_row.post_data())
+        print_to_file(db.get_file_data())
+
+    timer_content = ttk.Frame(timer_window)
+
+    # timer = StringVar()
+    timer_txt = ttk.Label(timer_window, text="00:00:00")
+    project_txt = ttk.Label(
+        timer_window, text=f"The project you are working on is {project}"
+    )
+    subproject_txt = ttk.Label(
+        timer_window, text=f"The subproject you working on is {subproject}"
+    )
+    stop_timer_btn = ttk.Button(timer_window, text="Stop Timer", command=stop_timer)
+
+    timer_content.grid(column=0, row=0)
+    timer_txt.grid(column=0, row=0, columnspan=2, sticky="we")
+    project_txt.grid(column=0, row=1)
+    subproject_txt.grid(column=1, row=1)
+    stop_timer_btn.grid(column=0, row=2, columnspan=2, sticky="we")
+
+
+def start_all():
+    project = get_project_name_from_list()
+    subproject = get_subproject_name_from_list()
+    project_id = db.get_project_id(project)
+    subproject_id = db.get_subproject_id(subproject)
+    new_row.start_logger(project_id[0], subproject_id[0])
+    open_timer(project, subproject)
+
+
+root = tk.Tk()
+
+p_col = ttk.Frame(root)
+s_col = ttk.Frame(root)
+b_col = ttk.Frame(root)
+
+p_var = tk.StringVar(value=db.get_projects())
+s_var = tk.StringVar(value=[])
+
+p_lbl = ttk.Label(p_col, text="Project:")
+p_list = tk.Listbox(p_col, listvariable=p_var, exportselection=False)
+p_bar = ttk.Separator(p_col, orient=HORIZONTAL)
+pe_lbl = ttk.Label(p_col, text="Add a new project")
+pe_ety = ttk.Entry(p_col)
+pe_btn = ttk.Button(p_col, text="Add", command=add_project)
+
+p_list.bind("<<ListboxSelect>>", update_subprojects)
+
+s_lbl = ttk.Label(s_col, text="Subproject:")
+s_list = tk.Listbox(s_col, listvariable=s_var, exportselection=False)
+s_bar = ttk.Separator(s_col, orient=HORIZONTAL)
+se_lbl = ttk.Label(s_col, text="Add a new subproject")
+se_ety = ttk.Entry(s_col)
+se_btn = ttk.Button(s_col, text="Add", command=add_subproject)
+
+s_list.bind("<<ListboxSelect>>", update_payment)
+
+resultsContent = tk.StringVar()
+b_lbl = ttk.Label(b_col, text="Hourly rate:")
+b_lbl_rate = ttk.Label(b_col, textvariable=resultsContent)
+b_lbl_ety = ttk.Label(b_col, text="Update hourly rate")
+b_ety = ttk.Entry(b_col)
+b_ety_btn = ttk.Button(b_col, text="Update", command=alter_payment)
+b_start_btn = ttk.Button(b_col, text="Start timer", command=start_all)
+
+
+p_col.grid(column=0, row=0)
+p_lbl.grid(column=0, row=0)
+p_list.grid(column=0, row=1, rowspan=5)
+p_bar.grid(column=0, row=6, pady=5)
+pe_lbl.grid(column=0, row=7)
+pe_ety.grid(column=0, row=8)
+pe_btn.grid(column=0, row=9)
+
+s_col.grid(column=1, row=0)
+s_lbl.grid(column=0, row=0)
+s_list.grid(column=0, row=1, rowspan=5)
+s_bar.grid(column=0, row=6, pady=5)
+se_lbl.grid(column=0, row=7)
+se_ety.grid(column=0, row=8)
+se_btn.grid(column=0, row=9)
+
+b_col.grid(column=2, row=0)
+b_lbl.grid(column=0, row=0, sticky="n")
+b_lbl_rate.grid(column=1, row=0, sticky="n")
+b_lbl_ety.grid(column=0, row=1, columnspan=2)
+b_ety.grid(column=0, row=2, columnspan=2)
+b_ety_btn.grid(column=0, row=3, columnspan=2)
+b_start_btn.grid(column=0, row=7, columnspan=2, rowspan=2)
+
+root.mainloop()

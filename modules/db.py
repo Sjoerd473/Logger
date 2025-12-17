@@ -20,7 +20,6 @@ class LoggerDB:
             return cur.fetchall()
 
     def get_project_id(self, project):
-        print(project)
         with self.conn.cursor() as cur:
             cur.execute("SELECT id FROM projects WHERE name = %s", ((project,)))
             return cur.fetchone()
@@ -36,6 +35,20 @@ class LoggerDB:
             result = cur.fetchone()
             cur.execute(
                 "SELECT name FROM subprojects WHERE project_id = %s", ((result[0],))
+            )
+            return cur.fetchall()
+
+    def get_file_data(self):
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "SELECT logs.id, p.name AS project_name, s.name AS subproject_name, day, month, year, start_time, end_time, time_spent, time_in_minutes, retribuizione FROM logs JOIN projects AS p on logs.project_id = p.id JOIN subprojects AS s ON logs.subproject_id = s.id"
+            )
+            return cur.fetchall()
+
+    def get_hourly(self, sub):
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "SELECT retribuizione FROM subprojects WHERE name = %s", ((sub,))
             )
             return cur.fetchall()
 
@@ -55,24 +68,17 @@ class LoggerDB:
             self.conn.commit()
 
     def post_log(self, data):
-        print(data)
         with self.conn.cursor() as cur:
             cur.execute(
-                "INSERT INTO logs (project, subproject, day, month, year, start_time, end_time) VALUES(%s,%s,%s,%s,%s,%s,%s)",
+                "INSERT INTO logs (project_id, subproject_id, day, month, year, start_time, end_time) VALUES(%s,%s,%s,%s,%s,%s,%s)",
                 ((data[0], data[1], data[2], data[3], data[4], data[5], data[6])),
             )
             self.conn.commit()
 
+    def update_hourly(self, n, sub):
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "UPDATE subprojects SET retribuizione = %s WHERE name = %s", ((n, sub))
+            )
 
-# with psycopg.connect("dbname=logger user=postgres password=megablaat") as conn:
-#     with conn.cursor() as cur:
-#         cur.execute("SELECT * FROM logs")
-#         for record in cur:
-#             print(record)
-
-#         conn.commit()
-
-
-# def get_subs(project): ...
-# def get_projects():
-#     return ["oen", "two"]
+            self.conn.commit()
