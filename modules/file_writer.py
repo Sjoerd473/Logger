@@ -17,7 +17,10 @@ HEADERS = [
     "End time",
     "Total time spent",
     "Time spent in minutes",
-    "Payment",
+    "Time spend in hours",
+    "Hourly rate",
+    "Total payment by minute",
+    "Total payment by hour",
 ]
 
 
@@ -43,7 +46,10 @@ def print_to_file(data):
                         "End time": row[7].strftime("%H:%M:%S"),
                         "Total time spent": str(row[8]),
                         "Time spent in minutes": row[9],
-                        "Payment": round(row[10] * (row[9] / 60)),
+                        "Time spend in hours": row[11],
+                        "Hourly rate": row[10],
+                        "Total payment by minute": round(row[10] * (row[9] / 60)),
+                        "Total payment by hour": round(row[11] * row[10]),
                     }
                 )
         else:
@@ -61,7 +67,10 @@ def print_to_file(data):
                     "End time": row[7].strftime("%H:%M:%S"),
                     "Total time spent": str(row[8]),
                     "Time spent in minutes": row[9],
-                    "Payment": round(row[10] * (row[9] / 60)),
+                    "Time spend in hours": row[11],
+                    "Hourly rate": row[10],
+                    "Total payment by minute": round(row[10] * (row[9] / 60)),
+                    "Total payment by hour": round(row[11] * row[10]),
                 }
             )
 

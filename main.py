@@ -7,7 +7,6 @@ import psycopg
 from modules.db import LoggerDB
 from modules.file_writer import print_to_file, refresh_file
 from modules.row_writer import Add_row
-from psycopg.errors import IntegrityError
 
 dsn = "dbname=logger user=postgres password=megablaat"
 
@@ -15,19 +14,11 @@ new_row = Add_row()
 db = LoggerDB(dsn)
 
 
-# niente frutta secca/nocciole
-#
-#
-# , check for unique on names,
-#  error handling, add a clock to the timer, layout sizing and positioning,
+# layout sizing and positioning,
 # uniqueness constraint on sub name + proj_id > alter queries to include a proj_id
-# uniqueness constraint on project names
 # input sanitizing > whitespaces, lowercase?
-# check hourly > 0 also in db
+
 #
-
-
-def start_timer(): ...
 
 
 def refresh_listbox(cat, project=""):
@@ -180,10 +171,16 @@ def open_timer(project, subproject):
             timer_window.after(1000, update_timer_txt)
 
     def stop_timer():
-        timer_window.destroy()
-        new_row.end_logger()
-        db.post_log(new_row.post_data())
-        print_to_file(db.get_file_data())
+        try:
+            timer_window.destroy()
+            new_row.end_logger()
+            db.post_log(new_row.post_data())
+            print_to_file(db.get_file_data())
+        except IndexError:
+            messagebox.showerror(
+                "Database Error",
+                "Something went wrong trying to write the data to a file.",
+            )
 
     timer_content = ttk.Frame(timer_window)
 
@@ -209,12 +206,19 @@ def open_timer(project, subproject):
 
 
 def start_all():
-    project = get_project_name_from_list()
-    subproject = get_subproject_name_from_list()
-    project_id = db.get_project_id(project)
-    subproject_id = db.get_subproject_id(subproject)
-    new_row.start_logger(project_id[0], subproject_id[0])
-    open_timer(project, subproject)
+    try:
+        project = get_project_name_from_list()
+        subproject = get_subproject_name_from_list()
+        project_id = db.get_project_id(project)
+
+        subproject_id = db.get_subproject_id(subproject, project_id[0])
+        new_row.start_logger(project_id[0], subproject_id[0])
+        open_timer(project, subproject)
+    except TypeError:
+        messagebox.showerror(
+            "Missing Subproject",
+            "Unable to start a timer without chosing both a project and a subproject",
+        )
 
 
 root = tk.Tk()
@@ -223,8 +227,7 @@ p_col = ttk.Frame(root)
 s_col = ttk.Frame(root)
 b_col = ttk.Frame(root)
 
-projects = [row[0] for row in db.get_projects()]
-p_var = tk.StringVar(value=projects)
+
 p_var = tk.StringVar(value=db.get_projects())
 s_var = tk.StringVar(value=[])
 

@@ -24,9 +24,12 @@ class LoggerDB:
             cur.execute("SELECT id FROM projects WHERE name = %s", ((project,)))
             return cur.fetchone()
 
-    def get_subproject_id(self, subproject):
+    def get_subproject_id(self, subproject, project_id):
         with self.conn.cursor() as cur:
-            cur.execute("SELECT id FROM subprojects WHERE name = %s", ((subproject,)))
+            cur.execute(
+                "SELECT id FROM subprojects WHERE name = %s AND project_id = %s",
+                ((subproject, project_id)),
+            )
             return cur.fetchone()
 
     def get_subs(self, project):
@@ -41,8 +44,9 @@ class LoggerDB:
     def get_file_data(self):
         with self.conn.cursor() as cur:
             cur.execute(
-                "SELECT logs.id, p.name AS project_name, s.name AS subproject_name, day, month, year, start_time, end_time, time_spent, time_in_minutes, retribuizione FROM logs JOIN projects AS p on logs.project_id = p.id JOIN subprojects AS s ON logs.subproject_id = s.id"
+                "SELECT logs.id, p.name AS project_name, s.name AS subproject_name, day, month, year, start_time, end_time, time_spent, time_in_minutes, retribuizione, time_in_hours FROM logs JOIN projects AS p on logs.project_id = p.id JOIN subprojects AS s ON logs.subproject_id = s.id"
             )
+
             return cur.fetchall()
 
     def get_hourly(self, sub):
