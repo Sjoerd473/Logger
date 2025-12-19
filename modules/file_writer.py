@@ -61,6 +61,7 @@ def print_to_file(data):
                     "End time": row[7].strftime("%H:%M:%S"),
                     "Total time spent": str(row[8]),
                     "Time spent in minutes": row[9],
+                    "Payment": round(row[10] * (row[9] / 60)),
                 }
             )
 

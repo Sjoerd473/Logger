@@ -50,7 +50,7 @@ class LoggerDB:
             cur.execute(
                 "SELECT retribuizione FROM subprojects WHERE name = %s", ((sub,))
             )
-            return cur.fetchall()
+            return cur.fetchone()
 
     def post_project(self, project):
         with self.conn.cursor() as cur:
