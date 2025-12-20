@@ -36,20 +36,24 @@ def print_to_file(data):
             for row in data:
                 writer.writerow(
                     {
-                        "Id": row[0],
-                        "Project": row[1],
-                        "Subproject": row[2],
-                        "Day": row[3],
-                        "Month": row[4],
-                        "Year": row[5],
-                        "Start time": row[6].strftime("%H:%M:%S"),
-                        "End time": row[7].strftime("%H:%M:%S"),
-                        "Total time spent": str(row[8]),
-                        "Time spent in minutes": row[9],
-                        "Time spend in hours": row[11],
-                        "Hourly rate": row[10],
-                        "Total payment by minute": round(row[10] * (row[9] / 60)),
-                        "Total payment by hour": round(row[11] * row[10]),
+                        "Id": row["id"],
+                        "Project": row["project_name"],
+                        "Subproject": row["subproject_name"],
+                        "Day": row["day"],
+                        "Month": row["month"],
+                        "Year": row["year"],
+                        "Start time": row["start_time"].strftime("%H:%M:%S"),
+                        "End time": row["end_time"].strftime("%H:%M:%S"),
+                        "Total time spent": str(row["time_spent"]),
+                        "Time spent in minutes": row["time_in_minutes"],
+                        "Time spend in hours": row["time_in_hours"],
+                        "Hourly rate": row["retribuizione"],
+                        "Total payment by minute": round(
+                            row["retribuizione"] * (row["time_in_minutes"] / 60)
+                        ),
+                        "Total payment by hour": round(
+                            row["retribuizione"] * row["time_in_hours"]
+                        ),
                     }
                 )
         else:
@@ -57,20 +61,24 @@ def print_to_file(data):
 
             writer.writerow(
                 {
-                    "Id": row[0],
-                    "Project": row[1],
-                    "Subproject": row[2],
-                    "Day": row[3],
-                    "Month": row[4],
-                    "Year": row[5],
-                    "Start time": row[6].strftime("%H:%M:%S"),
-                    "End time": row[7].strftime("%H:%M:%S"),
-                    "Total time spent": str(row[8]),
-                    "Time spent in minutes": row[9],
-                    "Time spend in hours": row[11],
-                    "Hourly rate": row[10],
-                    "Total payment by minute": round(row[10] * (row[9] / 60)),
-                    "Total payment by hour": round(row[11] * row[10]),
+                    "Id": row["id"],
+                    "Project": row["project_name"],
+                    "Subproject": row["subproject_name"],
+                    "Day": row["day"],
+                    "Month": row["month"],
+                    "Year": row["year"],
+                    "Start time": row["start_time"].strftime("%H:%M:%S"),
+                    "End time": row["end_time"].strftime("%H:%M:%S"),
+                    "Total time spent": str(row["time_spent"]),
+                    "Time spent in minutes": row["time_in_minutes"],
+                    "Time spend in hours": row["time_in_hours"],
+                    "Hourly rate": row["retribuizione"],
+                    "Total payment by minute": round(
+                        row["retribuizione"] * (row["time_in_minutes"] / 60)
+                    ),
+                    "Total payment by hour": round(
+                        row["retribuizione"] * row["time_in_hours"]
+                    ),
                 }
             )
 

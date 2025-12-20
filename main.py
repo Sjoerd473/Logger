@@ -23,12 +23,13 @@ db = LoggerDB(dsn)
 # third column for subsubproject
 
 
+# modify for dicts?
 def refresh_listbox(cat, project=""):
     if cat == "p":
-        projects = db.get_projects()
+        projects = [item["name"] for item in db.get_projects()]
         p_var.set(projects)
     elif cat == "s":
-        subs = db.get_subs(project)
+        subs = [item["name"] for item in db.get_subs(project)]
         s_var.set(subs)
 
 
@@ -73,7 +74,7 @@ def show_error(msg):
 def add_project():
     p_name = pe_ety.get().strip()
 
-    p_names = db.get_projects()
+    p_names = [item["name"] for item in db.get_projects()]
 
     if p_name in p_names:
         show_error(f"{p_name} already in database!")
@@ -89,12 +90,13 @@ def add_project():
                 "Duplicate Project", f"Project '{p_name}' already exists."
             )
         except Exception as e:
+            db.conn.rollback()
             messagebox.showerror("Database Error", str(e))
 
 
 def add_subproject():
     p_name = get_project_name_from_list()
-    p_subs = db.get_subs(p_name)
+    p_subs = [item["name"] for item in db.get_subs(p_name)]
     if p_name:
         s_name = se_ety.get().strip()
         if any(tup[0] == s_name for tup in p_subs):
@@ -112,6 +114,7 @@ def add_subproject():
                     f"Project '{p_name}' already has a subproject named '{s_name}'.",
                 )
             except Exception as e:
+                db.conn.rollback()
                 messagebox.showerror("Database Error", str(e))
 
     else:
@@ -122,20 +125,22 @@ def update_subprojects(event):
     p_name = get_project_name_from_list()
 
     if p_name:
-        new_subs = db.get_subs(p_name)
+        new_subs = [item["name"] for item in db.get_subs(p_name)]
 
         s_var.set(new_subs)
 
 
+# change for payment from logs
 def update_payment(event):
     s_name = get_subproject_name_from_list()
 
     if s_name:
-        hourly_rate = db.get_hourly(s_name[0])
+        hourly_rate = db.get_hourly(s_name)["retribuizione"]
 
-        resultsContent.set(f"{hourly_rate[0]}€")
+        resultsContent.set(f"{hourly_rate}€")
 
 
+# change for payment from logs
 def alter_payment():
     s_name = get_subproject_name_from_list()
 
@@ -211,11 +216,11 @@ def start_all():
     try:
         project = get_project_name_from_list()
         subproject = get_subproject_name_from_list()
-        project_id = db.get_project_id(project)
+        project_id = db.get_project_id(project)["id"]
 
-        subproject_id = db.get_subproject_id(subproject[0], project_id[0])
-        new_row.start_logger(project_id[0], subproject_id[0])
-        open_timer(project, subproject[0])
+        subproject_id = db.get_subproject_id(subproject, project_id)["id"]
+        new_row.start_logger(project_id, subproject_id)
+        open_timer(project, subproject)
     except TypeError:
         messagebox.showerror(
             "Missing Subproject",
@@ -231,7 +236,7 @@ s_col = ttk.Frame(root, padding=(12, 12, 12, 12))
 b_col = ttk.Frame(root, padding=(12, 12, 12, 12))
 
 
-p_var = tk.StringVar(value=db.get_projects())
+p_var = tk.StringVar(value=[item["name"] for item in db.get_projects()])
 s_var = tk.StringVar(value=[])
 
 p_lbl = ttk.Label(p_col, text="Project:")
