@@ -15,10 +15,12 @@ db = LoggerDB(dsn)
 
 
 # layout sizing and positioning,
-# uniqueness constraint on sub name + proj_id > alter queries to include a proj_id
-# input sanitizing > whitespaces, lowercase?
-
-#
+# get_subrpject_name should return s_name[0], reredo all the functions that depend on it
+# return subrpojects without brackets
+# make it impossible to add nameless projects
+# hourly rate on logs not subproject
+# window to mark things complete
+# third column for subsubproject
 
 
 def refresh_listbox(cat, project=""):
@@ -35,7 +37,7 @@ def get_project_name_from_list():
 
     if p_selection:
         p_name = p_list.get(p_selection[0])
-        return p_name[0]
+        return p_name
 
 
 def get_subproject_name_from_list():
@@ -43,7 +45,7 @@ def get_subproject_name_from_list():
 
     if selection:
         s_name = s_list.get([selection[0]])
-        return s_name[0]
+        return s_name
 
 
 def remove_error():
@@ -73,7 +75,7 @@ def add_project():
 
     p_names = db.get_projects()
 
-    if any(tup[0] == p_name for tup in p_names):
+    if p_name in p_names:
         show_error(f"{p_name} already in database!")
         # this needs to fire on a typing event in the box
     else:
@@ -129,7 +131,7 @@ def update_payment(event):
     s_name = get_subproject_name_from_list()
 
     if s_name:
-        hourly_rate = db.get_hourly(s_name)
+        hourly_rate = db.get_hourly(s_name[0])
 
         resultsContent.set(f"{hourly_rate[0]}€")
 
@@ -145,7 +147,7 @@ def alter_payment():
             if hourly <= 0:
                 raise ValueError
             b_ety.delete(0, tk.END)
-            db.update_hourly(n, s_name)
+            db.update_hourly(n, s_name[0])
             refresh_file(db.get_file_data())
             update_payment("")
         except ValueError:
@@ -182,7 +184,7 @@ def open_timer(project, subproject):
                 "Something went wrong trying to write the data to a file.",
             )
 
-    timer_content = ttk.Frame(timer_window)
+    timer_content = ttk.Frame(timer_window, padding=(12, 12, 12, 12))
 
     # timer = StringVar()
     timer_lbl = ttk.Label(timer_window, text="You have been working for")
@@ -195,12 +197,12 @@ def open_timer(project, subproject):
     )
     stop_timer_btn = ttk.Button(timer_window, text="Stop Timer", command=stop_timer)
 
-    timer_content.grid(column=0, row=0)
+    timer_content.grid(column=0, row=0, padx=15, pady=15)
     timer_lbl.grid(column=0, row=0)
     timer_txt.grid(column=1, row=0, columnspan=2, sticky="we")
-    project_txt.grid(column=0, row=1)
-    subproject_txt.grid(column=1, row=1)
-    stop_timer_btn.grid(column=0, row=2, columnspan=2, sticky="we")
+    project_txt.grid(column=0, row=1, pady=10, padx=(5, 5))
+    subproject_txt.grid(column=1, row=1, pady=10, padx=(5, 5))
+    stop_timer_btn.grid(column=0, row=2, columnspan=2, sticky="we", pady=(10, 0))
 
     update_timer_txt()
 
@@ -211,9 +213,9 @@ def start_all():
         subproject = get_subproject_name_from_list()
         project_id = db.get_project_id(project)
 
-        subproject_id = db.get_subproject_id(subproject, project_id[0])
+        subproject_id = db.get_subproject_id(subproject[0], project_id[0])
         new_row.start_logger(project_id[0], subproject_id[0])
-        open_timer(project, subproject)
+        open_timer(project, subproject[0])
     except TypeError:
         messagebox.showerror(
             "Missing Subproject",
@@ -222,10 +224,11 @@ def start_all():
 
 
 root = tk.Tk()
+root.title("Am I working too much?")
 
-p_col = ttk.Frame(root)
-s_col = ttk.Frame(root)
-b_col = ttk.Frame(root)
+p_col = ttk.Frame(root, padding=(12, 12, 12, 12))
+s_col = ttk.Frame(root, padding=(12, 12, 12, 12))
+b_col = ttk.Frame(root, padding=(12, 12, 12, 12))
 
 
 p_var = tk.StringVar(value=db.get_projects())
@@ -262,7 +265,7 @@ error_var = tk.StringVar()
 error_lbl = ttk.Label(root, textvariable=error_var, foreground="red")
 
 
-p_col.grid(column=0, row=0)
+p_col.grid(column=0, row=0, sticky="nwes")
 p_lbl.grid(column=0, row=0)
 p_list.grid(column=0, row=1, rowspan=5)
 p_bar.grid(column=0, row=6, pady=5)
@@ -279,12 +282,12 @@ se_ety.grid(column=0, row=8)
 se_btn.grid(column=0, row=9)
 
 b_col.grid(column=2, row=0)
-b_lbl.grid(column=0, row=0, sticky="n")
-b_lbl_rate.grid(column=1, row=0, sticky="n")
-b_lbl_ety.grid(column=0, row=1, columnspan=2)
-b_ety.grid(column=0, row=2, columnspan=2)
-b_ety_btn.grid(column=0, row=3, columnspan=2)
-b_start_btn.grid(column=0, row=7, columnspan=2, rowspan=2)
+b_lbl.grid(column=0, row=0, sticky="n", pady=(0, 25))
+b_lbl_rate.grid(column=1, row=0, sticky="n", pady=(0, 25))
+b_lbl_ety.grid(column=0, row=1, columnspan=2, pady=5)
+b_ety.grid(column=0, row=2, columnspan=2, pady=5)
+b_ety_btn.grid(column=0, row=3, columnspan=2, pady=(0, 25))
+b_start_btn.grid(column=0, row=7, columnspan=2, rowspan=2, pady=(80, 0))
 
 error_lbl.grid(column=0, row=1, columnspan=3)
 

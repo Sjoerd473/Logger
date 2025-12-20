@@ -1,5 +1,7 @@
 import psycopg
 
+# from psycopg.rows import dict_row
+
 
 class LoggerDB:
     def __init__(self, dsn):
@@ -16,8 +18,9 @@ class LoggerDB:
 
     def get_projects(self):
         with self.conn.cursor() as cur:
-            cur.execute("SELECT name FROM projects")
-            return cur.fetchall()
+            cur.execute("SELECT name FROM projects ORDER BY name ASC")
+            projects = [row[0] for row in cur.fetchall()]
+            return projects
 
     def get_project_id(self, project):
         with self.conn.cursor() as cur:
@@ -37,7 +40,8 @@ class LoggerDB:
             cur.execute("SELECT id FROM projects WHERE name = %s", ((project,)))
             result = cur.fetchone()
             cur.execute(
-                "SELECT name FROM subprojects WHERE project_id = %s", ((result[0],))
+                "SELECT name FROM subprojects WHERE project_id = %s ORDER BY name ASC",
+                ((result[0],)),
             )
             return cur.fetchall()
 
