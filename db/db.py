@@ -1,3 +1,5 @@
+import os
+
 import psycopg
 from psycopg.rows import dict_row
 
@@ -5,7 +7,12 @@ from psycopg.rows import dict_row
 class LoggerDB:
     def __init__(self, dsn):
         # Open a single connection
-        self.conn = psycopg.connect(dsn, row_factory=dict_row)
+        self.conn = psycopg.connect(
+            os.getenv("postgresql://postgres:postgres@db:5432/loggerdb"),
+            row_factory=dict_row,
+        )
+        self.conn.autocommit = True
+        self._create_tables_if_missing()
 
     def __enter__(self):
         # Return the instance so you can call methods on it
@@ -217,10 +224,82 @@ class LoggerDB:
             )
         self.conn.commit()
 
-    # def update_hourly(self, n, sub):
-    #     with self.conn.cursor() as cur:
-    #         cur.execute(
-    #             "UPDATE subprojects SET retribuizione = %s WHERE name = %s", ((n, sub))
-    #         )
+    def _create_tables_if_missing(self):
+        with self.conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS public.logs
+                (
+                    id integer NOT NULL DEFAULT nextval('logs_id_seq'::regclass),
+                    project_id integer NOT NULL,
+                    subproject_id integer,
+                    day character varying(2) COLLATE pg_catalog."default" NOT NULL,
+                    month character varying(50) COLLATE pg_catalog."default" NOT NULL,
+                    year character varying(4) COLLATE pg_catalog."default",
+                    start_time time without time zone NOT NULL,
+                    end_time time without time zone NOT NULL,
+                    time_spent interval GENERATED ALWAYS AS ((end_time - start_time)) STORED,
+                    time_in_minutes integer GENERATED ALWAYS AS (((EXTRACT(epoch FROM (end_time - start_time)) / (60)::numeric))::integer) STORED,
+                    time_in_hours numeric GENERATED ALWAYS AS ((round(((EXTRACT(epoch FROM (end_time - start_time)) / 3600.0) / 0.25)) * 0.25)) STORED,
+                    hourly_rate integer DEFAULT 0,
+                    earnings integer GENERATED ALWAYS AS (((EXTRACT(epoch FROM (end_time - start_time)) / 3600.0) * (hourly_rate)::numeric)) STORED,
+                    activity_id integer,
+                    CONSTRAINT logs_pkey PRIMARY KEY (id),
+                    CONSTRAINT logs_activity_id_fkey FOREIGN KEY (activity_id)
+                        REFERENCES public.activities (id) MATCH SIMPLE
+                        ON UPDATE NO ACTION
+                        ON DELETE NO ACTION,
+                    CONSTRAINT logs_project_fkey FOREIGN KEY (project_id)
+                        REFERENCES public.projects (id) MATCH SIMPLE
+                        ON UPDATE NO ACTION
+                        ON DELETE NO ACTION,
+                    CONSTRAINT logs_subproject_fkey FOREIGN KEY (subproject_id)
+                        REFERENCES public.subprojects (id) MATCH SIMPLE
+                        ON UPDATE NO ACTION
+                        ON DELETE NO ACTION
+                )
 
-    #         self.conn.commit()
+                TABLESPACE pg_default;
+
+                ALTER TABLE IF EXISTS public.logs
+                    OWNER to postgres;
+
+                """)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS public.projects
+                (
+                    id integer NOT NULL DEFAULT nextval('projects_id_seq'::regclass),
+                    name character varying(255) COLLATE pg_catalog."default" NOT NULL,
+                    status boolean NOT NULL DEFAULT false,
+                    CONSTRAINT projects_pkey PRIMARY KEY (id),
+                    CONSTRAINT unique_project_name UNIQUE (name)
+                )
+
+                TABLESPACE pg_default;
+
+                ALTER TABLE IF EXISTS public.projects
+                    OWNER to postgres;
+                """)
+
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS public.subprojects
+                (
+                    id integer NOT NULL DEFAULT nextval('subprojects_id_seq'::regclass),
+                    name character varying(255) COLLATE pg_catalog."default" NOT NULL,
+                    project_id integer,
+                    status boolean NOT NULL DEFAULT false,
+                    CONSTRAINT subprojects_pkey PRIMARY KEY (id),
+                    CONSTRAINT unique_name_and_project UNIQUE (name, project_id),
+                    CONSTRAINT subprojects_project_fkey FOREIGN KEY (project_id)
+                        REFERENCES public.projects (id) MATCH SIMPLE
+                        ON UPDATE NO ACTION
+                        ON DELETE NO ACTION
+                )
+
+                TABLESPACE pg_default;
+
+                ALTER TABLE IF EXISTS public.subprojects
+                    OWNER to postgres;
+                """)
+            cur.execute("""
+
+                """)
