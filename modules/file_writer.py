@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 import csv
-import time as time
+from datetime import datetime
 from pathlib import Path
 
 destination_file = Path.home() / "work_log.csv"
@@ -24,67 +24,65 @@ HEADERS = [
 ]
 
 
+def _compute_time_fields(row):
+    start = datetime.strptime(row["start_time"], "%H:%M:%S")
+    end = datetime.strptime(row["end_time"], "%H:%M:%S")
+
+    delta = end - start
+    minutes = int(delta.total_seconds() / 60)
+    hours = round(minutes / 60, 2)
+
+    earnings = round(hours * row["hourly_rate"], 2)
+
+    return {
+        "total_time": str(delta),
+        "minutes": minutes,
+        "hours": hours,
+        "earnings": earnings,
+    }
+
+
 def print_to_file(data):
     if not destination_file.is_file():
         destination_file.touch()
 
     with destination_file.open(mode="a", encoding="utf-8", newline="") as file:
         writer = csv.DictWriter(file, fieldnames=HEADERS)
+
+        # Write header if file is empty
         if file.tell() == 0:
             writer.writeheader()
 
+        # If writing all rows (first run)
+        if isinstance(data, list):
             for row in data:
-                writer.writerow(
-                    {
-                        "Id": row["id"],
-                        "Project": row["project_name"],
-                        "Subproject": row["subproject_name"],
-                        "Activity": row["activity_name"],
-                        "Day": row["day"],
-                        "Month": row["month"],
-                        "Year": row["year"],
-                        "Start time": row["start_time"].strftime("%H:%M:%S"),
-                        "End time": row["end_time"].strftime("%H:%M:%S"),
-                        "Total time spent": str(row["time_spent"]),
-                        "Time spent in minutes": row["time_in_minutes"],
-                        "Time spend in hours": row["time_in_hours"],
-                        "Hourly rate": row["hourly_rate"],
-                        "Earnings": row["earnings"],
-                        # "Total payment by minute": round(
-                        #     row["retribuizione"] * (row["time_in_minutes"] / 60)
-                        # ),
-                        # "Total payment by hour": round(
-                        #     row["retribuizione"] * row["time_in_hours"]
-                        # ),
-                    }
-                )
+                _write_row(writer, row)
         else:
-            row = data[-1]
+            # If writing only the last row
+            _write_row(writer, data)
 
-            writer.writerow(
-                {
-                    "Id": row["id"],
-                    "Project": row["project_name"],
-                    "Subproject": row["subproject_name"],
-                    "Activity": row["activity_name"],
-                    "Day": row["day"],
-                    "Month": row["month"],
-                    "Year": row["year"],
-                    "Start time": row["start_time"].strftime("%H:%M:%S"),
-                    "End time": row["end_time"].strftime("%H:%M:%S"),
-                    "Total time spent": str(row["time_spent"]),
-                    "Time spent in minutes": row["time_in_minutes"],
-                    "Time spend in hours": row["time_in_hours"],
-                    "Hourly rate": row["hourly_rate"],
-                    "Earnings": row["earnings"],
-                    # "Total payment by minute": round(
-                    #     row["retribuizione"] * (row["time_in_minutes"] / 60)
-                    # ),
-                    # "Total payment by hour": round(
-                    #     row["retribuizione"] * row["time_in_hours"]
-                    # ),
-                }
-            )
+
+def _write_row(writer, row):
+    computed = _compute_time_fields(row)
+
+    writer.writerow(
+        {
+            "Id": row["id"],
+            "Project": row["project_name"],
+            "Subproject": row["subproject_name"],
+            "Activity": row["activity_name"],
+            "Day": row["day"],
+            "Month": row["month"],
+            "Year": row["year"],
+            "Start time": row["start_time"],
+            "End time": row["end_time"],
+            "Total time spent": computed["total_time"],
+            "Time spent in minutes": computed["minutes"],
+            "Time spend in hours": computed["hours"],
+            "Hourly rate": row["hourly_rate"],
+            "Earnings": computed["earnings"],
+        }
+    )
 
 
 def refresh_file(data):

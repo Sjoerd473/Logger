@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
-from db.db import LoggerDB
+from db.db2 import LoggerDB
 from ui.activity_column import ActivityColumn
 from ui.error_row import ErrorRow
 from ui.project_column import ProjectColumn
@@ -13,13 +13,13 @@ dsn = "dbname=logger user=postgres password=megablaat"
 
 
 # layout sizing and positioning,
-# containerize? move the DSN data?
+# correct refresh on add buttons
 
 
 class App:
     def __init__(self, root):
         self.root = root
-        self.db = LoggerDB(dsn)
+        self.db = LoggerDB()
         self.new_row = Add_row()
         self.error_row = ErrorRow(root)
         self.root.geometry("+200+60")
