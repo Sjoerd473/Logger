@@ -10,6 +10,7 @@ HEADERS = [
     "Id",
     "Project",
     "Subproject",
+    "Activity",
     "Day",
     "Month",
     "Year",
@@ -19,8 +20,9 @@ HEADERS = [
     "Time spent in minutes",
     "Time spend in hours",
     "Hourly rate",
-    "Total payment by minute",
-    "Total payment by hour",
+    "Earnings",
+    # "Total payment by minute",
+    # "Total payment by hour",
 ]
 
 
@@ -39,6 +41,7 @@ def print_to_file(data):
                         "Id": row["id"],
                         "Project": row["project_name"],
                         "Subproject": row["subproject_name"],
+                        "Activity": row["activity_name"],
                         "Day": row["day"],
                         "Month": row["month"],
                         "Year": row["year"],
@@ -47,13 +50,14 @@ def print_to_file(data):
                         "Total time spent": str(row["time_spent"]),
                         "Time spent in minutes": row["time_in_minutes"],
                         "Time spend in hours": row["time_in_hours"],
-                        "Hourly rate": row["retribuizione"],
-                        "Total payment by minute": round(
-                            row["retribuizione"] * (row["time_in_minutes"] / 60)
-                        ),
-                        "Total payment by hour": round(
-                            row["retribuizione"] * row["time_in_hours"]
-                        ),
+                        "Hourly rate": row["hourly_rate"],
+                        "Earnings": row["earnings"],
+                        # "Total payment by minute": round(
+                        #     row["retribuizione"] * (row["time_in_minutes"] / 60)
+                        # ),
+                        # "Total payment by hour": round(
+                        #     row["retribuizione"] * row["time_in_hours"]
+                        # ),
                     }
                 )
         else:
@@ -64,6 +68,7 @@ def print_to_file(data):
                     "Id": row["id"],
                     "Project": row["project_name"],
                     "Subproject": row["subproject_name"],
+                    "Activity": row["activity_name"],
                     "Day": row["day"],
                     "Month": row["month"],
                     "Year": row["year"],
@@ -72,13 +77,14 @@ def print_to_file(data):
                     "Total time spent": str(row["time_spent"]),
                     "Time spent in minutes": row["time_in_minutes"],
                     "Time spend in hours": row["time_in_hours"],
-                    "Hourly rate": row["retribuizione"],
-                    "Total payment by minute": round(
-                        row["retribuizione"] * (row["time_in_minutes"] / 60)
-                    ),
-                    "Total payment by hour": round(
-                        row["retribuizione"] * row["time_in_hours"]
-                    ),
+                    "Hourly rate": row["hourly_rate"],
+                    "Earnings": row["earnings"],
+                    # "Total payment by minute": round(
+                    #     row["retribuizione"] * (row["time_in_minutes"] / 60)
+                    # ),
+                    # "Total payment by hour": round(
+                    #     row["retribuizione"] * row["time_in_hours"]
+                    # ),
                 }
             )
 

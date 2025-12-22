@@ -13,18 +13,6 @@ new_row = Add_row()
 db = LoggerDB(dsn)
 
 
-# layout sizing and positioning,
-# get_subrpject_name should return s_name[0], reredo all the functions that depend on it
-# return subrpojects without brackets
-# make it impossible to add nameless projects
-# hourly rate on logs not subproject
-# window to mark things complete
-# third column for subsubproject
-#
-# another class for a mark for complete window
-#
-
-
 class App:
     def __init__(self, root):
         self.root = root
@@ -209,22 +197,22 @@ class App:
         self.b_col = ttk.Frame(self.root, padding=(12, 12, 12, 12))
         self.b_col.grid(column=2, row=0)
         # Label - text
-        self.b_lbl = ttk.Label(self.b_col, text="Hourly rate:")
-        self.b_lbl.grid(column=0, row=0)
+        # self.b_lbl = ttk.Label(self.b_col, text="Hourly rate:")
+        # self.b_lbl.grid(column=0, row=0)
         # Label - rate
         self.b_lbl_rate = ttk.Label(self.b_col, textvariable=self.resultsContent)
         self.b_lbl_rate.grid(column=1, row=0, sticky="n", pady=(0, 25))
         # Label - update rate
-        self.b_lbl_ety = ttk.Label(self.b_col, text="Update hourly rate")
+        self.b_lbl_ety = ttk.Label(self.b_col, text="Set hourly rate")
         self.b_lbl_ety.grid(column=0, row=1, columnspan=2, pady=5)
         # Entry - update rate
         self.b_ety = ttk.Entry(self.b_col)
         self.b_ety.grid(column=0, row=2, columnspan=2, pady=5)
         # Button - update rate
-        self.b_ety_btn = ttk.Button(
-            self.b_col, text="Update", command=self.alter_payment
-        )
-        self.b_ety_btn.grid(column=0, row=3, columnspan=2, pady=(0, 25))
+        # self.b_ety_btn = ttk.Button(
+        #     self.b_col, text="Update", command=self.alter_payment
+        # )
+        # self.b_ety_btn.grid(column=0, row=3, columnspan=2, pady=(0, 25))
         # Button - start timer
         self.b_start_btn = ttk.Button(
             self.b_col, text="Start timer", command=self.start_all
@@ -239,8 +227,27 @@ class App:
     # BUTTON COLUMN LOGIC
     # -----------------------------
 
-    def alter_payment(self):
-        ...
+    # def get_hourly_rate(self):
+    #     try:
+    #         rate = int(self.b_ety.get().strip())
+
+    #     except ValueError:
+    #         messagebox.showerror(
+    #             "Missing Subproject",
+    #             "Invalid integer",
+    #         )
+    #     else:
+    #         return rate
+
+    def get_hourly_rate(self):
+        try:
+            rate = int(self.b_ety.get().strip())
+        except ValueError:
+            raise ValueError("Invalid hourly rate")
+        if rate < 0:
+            raise ValueError("Invalid hourly rate")
+        return rate
+
         # part of column 3
 
     def start_all(self):
@@ -248,15 +255,21 @@ class App:
             project = self.get_project_name_from_list()
             subproject = self.get_subproject_name_from_list()
             project_id = self.db.get_project_id(project)["id"]
-
+            hourly_rate = self.get_hourly_rate()
             subproject_id = self.db.get_subproject_id(subproject, project_id)["id"]
-            new_row.start_logger(project_id, subproject_id)
+            new_row.start_logger(project_id, subproject_id, hourly_rate)
 
-            timer = TimerWindow(root, project, subproject, new_row, db)
+            timer = TimerWindow(root, project, subproject, hourly_rate, new_row, db)
+
+        except ValueError:
+            messagebox.showerror(
+                "Invalid hourly rate",
+                "Unable to start a timer with an invalid hourly rate",
+            )
         except TypeError:
             messagebox.showerror(
                 "Missing Subproject",
-                "Unable to start a timer without chosing both a project and a subproject",
+                "Unable to start a timer without choosing both a project and a subproject",
             )
 
     # -----------------------------
