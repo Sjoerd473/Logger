@@ -9,7 +9,7 @@ from ui.row_writer import Add_row
 from ui.side_column import SideColumn
 from ui.sub_column import SubprojectColumn
 
-dsn = "dbname=logger user=postgres password=megablaat"
+# dsn = "dbname=logger user=postgres password=megablaat"
 
 
 # layout sizing and positioning,
@@ -19,7 +19,7 @@ dsn = "dbname=logger user=postgres password=megablaat"
 class App:
     def __init__(self, root):
         self.root = root
-        self.db = LoggerDB(dsn)
+        self.db = LoggerDB()
         self.new_row = Add_row()
         self.error_row = ErrorRow(root)
         self.root.geometry("+200+60")

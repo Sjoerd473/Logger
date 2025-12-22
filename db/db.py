@@ -5,7 +5,7 @@ from psycopg.rows import dict_row
 
 
 class LoggerDB:
-    def __init__(self, dsn):
+    def __init__(self):
         # Open a single connection
         self.conn = psycopg.connect(
             os.getenv("postgresql://postgres:postgres@db:5432/loggerdb"),
@@ -301,5 +301,28 @@ class LoggerDB:
                     OWNER to postgres;
                 """)
             cur.execute("""
+                CREATE TABLE IF NOT EXISTS public.activities
+                (
+                    id integer NOT NULL DEFAULT nextval('activities_id_seq'::regclass),
+                    name character varying(255) COLLATE pg_catalog."default" NOT NULL,
+                    sub_id integer NOT NULL,
+                    project_id integer NOT NULL,
+                    status boolean NOT NULL DEFAULT false,
+                    CONSTRAINT activities_pkey PRIMARY KEY (id),
+                    CONSTRAINT unique_activity_per_subproject UNIQUE (name, sub_id, project_id),
+                    CONSTRAINT fk_project FOREIGN KEY (project_id)
+                        REFERENCES public.projects (id) MATCH SIMPLE
+                        ON UPDATE NO ACTION
+                        ON DELETE CASCADE,
+                    CONSTRAINT fk_subproject FOREIGN KEY (sub_id)
+                        REFERENCES public.subprojects (id) MATCH SIMPLE
+                        ON UPDATE NO ACTION
+                        ON DELETE CASCADE
+                )
 
+                TABLESPACE pg_default;
+
+                ALTER TABLE IF EXISTS public.activities
+                    OWNER to postgres;
                 """)
+            self.conn.commit()
