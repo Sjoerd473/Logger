@@ -4,8 +4,8 @@ from tkinter import messagebox, ttk
 from modules.timer_window import TimerWindow
 
 
-class PaymentColumn(ttk.Frame):
-    def __init__(self, master, parent, db, new_row, show_error):
+class SideColumn(ttk.Frame):
+    def __init__(self, master, parent, db, new_row, show_error, show_add_controls=True):
         super().__init__(master, padding=(12, 12, 12, 12))
         self.parent = parent
         self.db = db
@@ -62,7 +62,13 @@ class PaymentColumn(ttk.Frame):
             )
 
             TimerWindow(
-                self.master, project, subproject, hourly_rate, self.new_row, self.db
+                self.master,
+                project,
+                subproject,
+                activity,
+                hourly_rate,
+                self.new_row,
+                self.db,
             )
 
         except ValueError:

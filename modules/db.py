@@ -17,6 +17,14 @@ class LoggerDB:
 
     def get_projects(self):
         with self.conn.cursor() as cur:
+            cur.execute(
+                "SELECT name FROM projects WHERE status = false ORDER BY name ASC"
+            )
+
+            return cur.fetchall()
+
+    def get_all_projects(self):
+        with self.conn.cursor() as cur:
             cur.execute("SELECT name FROM projects ORDER BY name ASC")
 
             return cur.fetchall()
@@ -25,6 +33,33 @@ class LoggerDB:
         with self.conn.cursor() as cur:
             cur.execute("SELECT id FROM projects WHERE name = %s", ((project,)))
             return cur.fetchone()["id"]
+
+    def get_project_status(self, project):
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "SELECT status FROM projects WHERE name = %s",
+                ((project,)),
+            )
+
+            return cur.fetchone()["status"]
+
+    def get_subs(self, project):
+        project_id = self.get_project_id(project)
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "SELECT name FROM subprojects WHERE project_id = %s AND status = false ORDER BY name ASC",
+                ((project_id,)),
+            )
+            return cur.fetchall()
+
+    def get_all_subs(self, project):
+        project_id = self.get_project_id(project)
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "SELECT name FROM subprojects WHERE project_id = %s ORDER BY name ASC",
+                ((project_id,)),
+            )
+            return cur.fetchall()
 
     def get_subproject_id(self, subproject, project_id):
         with self.conn.cursor() as cur:
@@ -35,33 +70,53 @@ class LoggerDB:
 
             return cur.fetchone()["id"]
 
-    def get_activity_id(self, project_id, subproject_id, activity):
+    def get_subproject_status(self, project_id, subproject):
         with self.conn.cursor() as cur:
             cur.execute(
-                "SELECT id FROM activities WHERE sub_id = %s AND project_id = %s AND name = %s",
-                ((subproject_id, project_id, activity)),
+                "SELECT status FROM subprojects WHERE project_id = %s AND name =%s",
+                ((project_id, subproject)),
             )
-            return cur.fetchone()["id"]
 
-    def get_subs(self, project):
-        project_id = self.get_project_id(project)
-        with self.conn.cursor() as cur:
-            cur.execute(
-                "SELECT name FROM subprojects WHERE project_id = %s ORDER BY name ASC",
-                ((project_id,)),
-            )
-            return cur.fetchall()
+            return cur.fetchone()["status"]
 
     def get_acts(self, project, subproject):
         project_id = self.get_project_id(project)
         sub_id = self.get_subproject_id(subproject, project_id)
         with self.conn.cursor() as cur:
             cur.execute(
-                "SELECT name FROM activities WHERE  sub_id = %s AND project_id = %s",
+                "SELECT name FROM activities WHERE  sub_id = %s AND project_id = %s AND status = false ORDER BY name ASC",
                 ((sub_id, project_id)),
             )
 
             return cur.fetchall()
+
+    def get_all_acts(self, project, subproject):
+        project_id = self.get_project_id(project)
+        sub_id = self.get_subproject_id(subproject, project_id)
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "SELECT name FROM activities WHERE  sub_id = %s AND project_id = %s ORDER BY name",
+                ((sub_id, project_id)),
+            )
+
+            return cur.fetchall()
+
+    def get_activity_id(self, project_id, subproject_id, activity):
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "SELECT id FROM activities WHERE project_id = %s AND sub_id = %s AND name = %s",
+                ((project_id, subproject_id, activity)),
+            )
+            return cur.fetchone()["id"]
+
+    def get_activity_status(self, project_id, subproject_id, activity):
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "SELECT status FROM activities WHERE project_id = %s AND sub_id = %s AND name =%s",
+                ((project_id, subproject_id, activity)),
+            )
+
+            return cur.fetchone()["status"]
 
     def get_file_data(self):
         with self.conn.cursor() as cur:
@@ -129,10 +184,44 @@ class LoggerDB:
             )
             self.conn.commit()
 
-    def update_hourly(self, n, sub):
+    def update_project(self, project):
+        project_status = not self.get_project_status(project)
+
         with self.conn.cursor() as cur:
             cur.execute(
-                "UPDATE subprojects SET retribuizione = %s WHERE name = %s", ((n, sub))
+                "UPDATE projects SET status = %s WHERE name = %s",
+                ((project_status, project)),
             )
 
-            self.conn.commit()
+        self.conn.commit()
+
+    def update_subproject(self, project, subproject):
+        project_id = self.get_project_id(project)
+        sub_status = not self.get_subproject_status(project_id, subproject)
+
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "UPDATE subprojects SET status = %s WHERE project_id = %s AND name = %s",
+                ((sub_status, project_id, subproject)),
+            )
+        self.conn.commit()
+
+    def update_activity(self, project, subproject, activity):
+        project_id = self.get_project_id(project)
+        sub_id = self.get_subproject_id(subproject, project_id)
+        act_status = not self.get_activity_status(project_id, sub_id, activity)
+
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "UPDATE activities SET status = %s WHERE project_id = %s AND sub_id = %s AND name = %s",
+                ((act_status, project_id, sub_id, activity)),
+            )
+        self.conn.commit()
+
+    # def update_hourly(self, n, sub):
+    #     with self.conn.cursor() as cur:
+    #         cur.execute(
+    #             "UPDATE subprojects SET retribuizione = %s WHERE name = %s", ((n, sub))
+    #         )
+
+    #         self.conn.commit()

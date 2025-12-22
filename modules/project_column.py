@@ -5,12 +5,23 @@ import psycopg
 
 
 class ProjectColumn(ttk.Frame):
-    def __init__(self, master, parent, db, on_project_selected, show_error):
+    def __init__(
+        self,
+        master,
+        parent,
+        db,
+        on_project_selected,
+        error_row,
+        show_add_controls=True,
+        show_all=False,
+    ):
         super().__init__(master, padding=(12, 12, 12, 12))
         self.parent = parent
         self.db = db
         self.on_project_selected = on_project_selected
-        self.show_error = show_error
+        self.error_row = error_row
+        self.show_add_controls = show_add_controls
+        self.show_all = show_all
 
         self._build_project_column()
         self._bind_project_events()
@@ -29,14 +40,21 @@ class ProjectColumn(ttk.Frame):
         self.p_list = tk.Listbox(self, listvariable=self.p_var, exportselection=False)
         self.p_list.grid(column=0, row=1, rowspan=5)
 
-        self.pe_lbl = ttk.Label(self, text="Add a new project")
-        self.pe_lbl.grid(column=0, row=6)
+        if self.show_add_controls:
+            self.pe_lbl = ttk.Label(self, text="Add a new project")
+            self.pe_lbl.grid(column=0, row=6)
 
-        self.pe_ety = ttk.Entry(self)
-        self.pe_ety.grid(column=0, row=7)
+            self.pe_ety = ttk.Entry(self)
+            self.pe_ety.grid(column=0, row=7)
 
-        self.pe_btn = ttk.Button(self, text="Add", command=self.add_project)
-        self.pe_btn.grid(column=0, row=8)
+            self.pe_btn = ttk.Button(self, text="Add", command=self.add_project)
+            self.pe_btn.grid(column=0, row=8)
+        else:
+            self.su_lbl = ttk.Label(self, text="Toggle project")
+            self.su_lbl.grid(column=0, row=7)
+
+            self.su_btn = ttk.Button(self, text="Update", command=self.update_project)
+            self.su_btn.grid(column=0, row=9)
 
     # -----------------------------
     # PROJECT COLUMN EVENTS
@@ -57,7 +75,9 @@ class ProjectColumn(ttk.Frame):
         p_names = [item["name"] for item in self.db.get_projects()]
 
         if p_name in p_names:
-            self.show_error(f"{p_name} already in database!")
+            self.error_row.show_error(f"{p_name} already in database!")
+        elif len(p_name) == 0:
+            self.error_row.show_error("Invalid name")
         else:
             try:
                 self.db.post_project(p_name)
@@ -79,6 +99,28 @@ class ProjectColumn(ttk.Frame):
             # print(new_subs)
             self.on_project_selected(p_name)
 
+    def update_project(self):
+        p_name = self.get_selected_project()
+
+        if p_name:
+            try:
+                self.db.update_project(p_name)
+                # self.refresh(p_name, s_name) this needs to do something else, update the side window???
+            except psycopg.IntegrityError:
+                self.db.conn.rollback()
+                messagebox.showerror(
+                    "Duplicate Activity",
+                    f"Subproject '{p_name}' already has an activity named.",
+                )
+            except Exception as e:
+                self.db.conn.rollback()
+                messagebox.showerror("Database Error", str(e))
+        else:
+            self.error_row.show_error("Select a project first")
+
     def refresh(self):
-        projects = [item["name"] for item in self.db.get_projects()]
+        if self.show_all:
+            projects = [item["name"] for item in self.db.get_all_projects()]
+        else:
+            projects = [item["name"] for item in self.db.get_projects()]
         self.p_var.set(projects)

@@ -2,14 +2,15 @@ import time
 import tkinter as tk
 from tkinter import messagebox, ttk
 
-from modules.file_writer import print_to_file, refresh_file
+from modules.file_writer import print_to_file
 
 
 class TimerWindow:
-    def __init__(self, parent, project, subproject, hourly_rate, new_row, db):
+    def __init__(self, parent, project, subproject, activity, hourly_rate, new_row, db):
         self.parent = parent
         self.project = project
         self.subproject = subproject
+        self.activity = activity
         self.hourly_rate = hourly_rate
         self.new_row = new_row
         self.db = db
@@ -40,7 +41,7 @@ class TimerWindow:
 
         # Label - timer
         self.timer_lbl = ttk.Label(self.timer_content, text="You have been working for")
-        self.timer_lbl.grid(column=0, row=0)
+        self.timer_lbl.grid(column=0, row=0, padx=(0, 3))
 
         # Label - clock
         self.timer_txt = ttk.Label(self.timer_content, text="00:00:00")
@@ -48,30 +49,36 @@ class TimerWindow:
 
         # Label - rate text
         self.rate_txt = ttk.Label(self.timer_content, text="With an hourly rate of: ")
-        self.rate_txt.grid(column=2, row=0)
+        self.rate_txt.grid(column=0, row=1)
         # Label - rate number
         self.rate_num = ttk.Label(self.timer_content, text=f"{self.hourly_rate}€")
-        self.rate_num.grid(column=3, row=0)
+        self.rate_num.grid(column=1, row=1)
 
         # Label - project
         self.project_txt = ttk.Label(
-            self.timer_content, text=f"The project you are working on is {self.project}"
+            self.timer_content, text=f"Project: {self.project}"
         )
-        self.project_txt.grid(column=0, row=1, pady=10, padx=(5, 5))
+        self.project_txt.grid(column=0, row=2, pady=1, padx=(5, 5))
 
         # Label - sub
         self.subproject_txt = ttk.Label(
             self.timer_content,
-            text=f"The subproject you working on is {self.subproject}",
+            text=f"Subproject: {self.subproject}",
         )
-        self.subproject_txt.grid(column=2, row=1, pady=10, padx=(5, 5))
+        self.subproject_txt.grid(column=0, row=3, pady=1, padx=(5, 5))
+
+        self.activity_txt = ttk.Label(
+            self.timer_content,
+            text=f"Activity: {self.activity}",
+        )
+        self.activity_txt.grid(column=0, row=4, pady=1, padx=(5, 5))
 
         # Button - stop timer
         self.stop_timer_btn = ttk.Button(
             self.timer_content, text="Stop Timer", command=self.stop_timer
         )
         self.stop_timer_btn.grid(
-            column=0, row=2, columnspan=3, sticky="we", pady=(10, 0)
+            column=0, row=5, columnspan=2, sticky="we", pady=(10, 0)
         )
 
     # -----------------------------
@@ -89,3 +96,5 @@ class TimerWindow:
                 "Database Error",
                 "Something went wrong trying to write the data to a file.",
             )
+
+        self.timer_window.protocol("WM_DELETE_WINDOW", self.stop_timer)
