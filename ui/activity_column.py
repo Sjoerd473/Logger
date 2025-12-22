@@ -26,9 +26,10 @@ class ActivityColumn(ttk.Frame):
         self.show_all = show_all
 
         self.a_var = tk.StringVar()
+        self.as_var = tk.StringVar()
 
         self._build_activity_column()
-        # self._bind_activity_events()
+        self._bind_activity_events()
 
     # -----------------------------
     # ACTIVITY COLUMN UI
@@ -62,11 +63,21 @@ class ActivityColumn(ttk.Frame):
     # -----------------------------
     # ACTIVITY COLUMN EVENTS
     # -----------------------------
-    #
+
+    def _bind_activity_events(self):
+        self.a_list.bind("<<ListboxSelect>>", self.update_status)
 
     # -----------------------------
     # ACTIVITY COLUMN LOGIC
     # -----------------------------
+    #
+    def update_status(self, event):
+        p_name = self.project_col.get_selected_project()
+        s_name = self.subproject_col.get_selected_subproject()
+        a_name = self.get_selected_activity()
+
+        if a_name:
+            self.refresh_status(p_name, s_name, a_name)
 
     def add_activity(self):
         s_name = self.subproject_col.get_selected_subproject()
@@ -75,7 +86,6 @@ class ActivityColumn(ttk.Frame):
         if s_name:
             s_acts = [item["name"] for item in self.db.get_acts(p_name, s_name)]
             a_name = self.ae_ety.get().strip()
-            print(len(a_name))
             if a_name in s_acts:
                 self.error_row.show_error(f"{a_name} already in database!")
             elif len(a_name) == 0:
@@ -105,7 +115,7 @@ class ActivityColumn(ttk.Frame):
         if a_name:
             try:
                 self.db.update_activity(p_name, s_name, a_name)
-                # self.refresh(p_name, s_name) this needs to do something else, update the side window???
+                self.refresh_status(p_name, s_name, a_name)
             except psycopg.IntegrityError:
                 self.db.conn.rollback()
                 messagebox.showerror(
@@ -129,6 +139,18 @@ class ActivityColumn(ttk.Frame):
         else:
             acts = [item["name"] for item in self.db.get_acts(project, subproject)]
         self.a_var.set(acts)
+
+    def refresh_status(self, project, subproject, activity):
+        project_id = self.db.get_project_id(project)
+        subproject_id = self.db.get_subproject_id(subproject, project_id)
+        activity_status = self.db.get_activity_status(
+            project_id, subproject_id, activity
+        )
+        if activity_status == 1:
+            activity_status = "Finished"
+        else:
+            activity_status = "Not finished"
+        self.as_var.set(activity_status)
 
     def reset(self):
         self.a_var.set([])

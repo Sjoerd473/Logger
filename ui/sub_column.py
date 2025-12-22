@@ -26,6 +26,7 @@ class SubprojectColumn(ttk.Frame):
         self.show_all = show_all
 
         self.s_var = tk.StringVar()
+        self.ss_var = tk.StringVar()
 
         self._build_subproject_column()
         self._bind_subproject_events()
@@ -63,9 +64,9 @@ class SubprojectColumn(ttk.Frame):
     # -----------------------------
     # SUBPROJECT COLUMN EVENTS
     # -----------------------------
+    #
     def _bind_subproject_events(self):
         self.s_list.bind("<<ListboxSelect>>", self.update_activities)
-        # needs to update activties
 
     # -----------------------------
     # SUBPROJECT COLUMN LOGIC
@@ -111,7 +112,7 @@ class SubprojectColumn(ttk.Frame):
         if s_name:
             try:
                 self.db.update_subproject(p_name, s_name)
-                # self.refresh(p_name, s_name) this needs to do something else, update the side window???
+                self.refresh_status(p_name, s_name)
             except psycopg.IntegrityError:
                 self.db.conn.rollback()
                 messagebox.showerror(
@@ -135,6 +136,15 @@ class SubprojectColumn(ttk.Frame):
         else:
             subs = [item["name"] for item in self.db.get_subs(project)]
         self.s_var.set(subs)
+
+    def refresh_status(self, project, subproject):
+        project_id = self.db.get_project_id(project)
+        subproject_status = self.db.get_subproject_status(project_id, subproject)
+        if subproject_status == 1:
+            subproject_status = "Finished"
+        else:
+            subproject_status = "Not finished"
+        self.ss_var.set(subproject_status)
 
     def reset(self):
         self.s_var.set([])

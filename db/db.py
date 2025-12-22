@@ -164,7 +164,6 @@ class LoggerDB:
         self.conn.commit()
 
     def post_log(self, data):
-        print(data)
         with self.conn.cursor() as cur:
             cur.execute(
                 "INSERT INTO logs (project_id, subproject_id, activity_id, day, month, year, start_time, end_time,hourly_rate) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)",

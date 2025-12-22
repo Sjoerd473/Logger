@@ -16,11 +16,14 @@ class TimerWindow:
         self.db = db
 
         self.timer_window = tk.Toplevel(parent)
+        self.timer_window.geometry("-200+60")
+        self.timer_window.title("Timer Window")
         self.running = True
         self.start_time = time.time()
 
         self._build_ui()
         self._update_timer()
+        self.timer_window.protocol("WM_DELETE_WINDOW", self.stop_timer)
 
     def _update_timer(self):
         if self.running:
@@ -96,5 +99,3 @@ class TimerWindow:
                 "Database Error",
                 "Something went wrong trying to write the data to a file.",
             )
-
-        self.timer_window.protocol("WM_DELETE_WINDOW", self.stop_timer)

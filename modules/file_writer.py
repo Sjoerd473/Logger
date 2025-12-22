@@ -21,8 +21,6 @@ HEADERS = [
     "Time spend in hours",
     "Hourly rate",
     "Earnings",
-    # "Total payment by minute",
-    # "Total payment by hour",
 ]
 
 

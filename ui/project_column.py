@@ -33,6 +33,7 @@ class ProjectColumn(ttk.Frame):
         self.grid(column=0, row=0, sticky="nwes")
 
         self.p_var = tk.StringVar()
+        self.ps_var = tk.StringVar()
 
         self.p_lbl = ttk.Label(self, text="Project:")
         self.p_lbl.grid(column=0, row=0)
@@ -95,8 +96,6 @@ class ProjectColumn(ttk.Frame):
     def update_subprojects(self, event):
         p_name = self.get_selected_project()
         if p_name:
-            # new_subs = [item["name"] for item in self.db.get_subs(p_name)]
-            # print(new_subs)
             self.on_project_selected(p_name)
 
     def update_project(self):
@@ -105,7 +104,7 @@ class ProjectColumn(ttk.Frame):
         if p_name:
             try:
                 self.db.update_project(p_name)
-                # self.refresh(p_name, s_name) this needs to do something else, update the side window???
+                self.refresh_status(p_name)
             except psycopg.IntegrityError:
                 self.db.conn.rollback()
                 messagebox.showerror(
@@ -124,3 +123,11 @@ class ProjectColumn(ttk.Frame):
         else:
             projects = [item["name"] for item in self.db.get_projects()]
         self.p_var.set(projects)
+
+    def refresh_status(self, project):
+        project_status = self.db.get_project_status(project)
+        if project_status == 1:
+            project_status = "Finished"
+        else:
+            project_status = "Not finished"
+        self.ps_var.set(project_status)

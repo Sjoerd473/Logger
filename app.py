@@ -1,25 +1,19 @@
 import tkinter as tk
 from tkinter import ttk
 
-from modules.activity_column import ActivityColumn
-from modules.db import LoggerDB
-from modules.error_row import ErrorRow
-from modules.project_column import ProjectColumn
-from modules.row_writer import Add_row
-from modules.side_column import SideColumn
-from modules.sub_column import SubprojectColumn
+from db.db import LoggerDB
+from ui.activity_column import ActivityColumn
+from ui.error_row import ErrorRow
+from ui.project_column import ProjectColumn
+from ui.row_writer import Add_row
+from ui.side_column import SideColumn
+from ui.sub_column import SubprojectColumn
 
 dsn = "dbname=logger user=postgres password=megablaat"
 
 
 # layout sizing and positioning,
-
-# window to mark things complete, error handling, a side window with information on the project
-
-
-#
-# closing update window refreshes main window, it now resets the columns, only refreshes projects
-#
+# containerize? move the DSN data?
 
 
 class App:
@@ -28,6 +22,8 @@ class App:
         self.db = LoggerDB(dsn)
         self.new_row = Add_row()
         self.error_row = ErrorRow(root)
+        self.root.geometry("+200+60")
+        self.root.title("Logger")
 
         self.error_var = tk.StringVar()
 
@@ -49,7 +45,16 @@ class App:
         self.activity_col = ActivityColumn(
             root, self, self.db, self.project_col, self.subproject_col, self.error_row
         )
-        self.payment_col = SideColumn(root, self, self.db, self.new_row, self.error_row)
+        self.payment_col = SideColumn(
+            root,
+            self,
+            self.db,
+            self.project_col,
+            self.subproject_col,
+            self.activity_col,
+            self.new_row,
+            self.error_row,
+        )
 
         self.error_row.grid(column=0, row=10)
 
@@ -57,15 +62,11 @@ class App:
 
         self.project_col.refresh()
 
-    # def _build_error_label(self):
-    #     self.error_lbl = ttk.Label(
-    #         self.root, textvariable=self.error_var, foreground="red"
-    #     )
-    #     self.error_lbl.grid(column=0, row=1, columnspan=3)
+    def on_project_selected(self, project_name):
+        self.subproject_col.refresh(project_name)
 
-    # def show_error(self, msg):
-    #     self.error_var.set(msg)
-    #     self.root.after(5000, lambda: self.error_var.set(""))
+    def on_subproject_selected(self, project, subproject):
+        self.activity_col.refresh(project, subproject)
 
     def _build_modify_btn(self):
         self.modify_btn = ttk.Button(
@@ -76,25 +77,31 @@ class App:
     def open_modify_window(self):
         win = tk.Toplevel(self.root)
         win.title("Project Settings")
+        win.geometry("700x250+200+460")
 
         error_row = ErrorRow(win)
         error_row.grid(column=2, row=5, columnspan=3)
 
         def on_close():
-            # refresh whatever you need in the main window
             self.project_col.refresh()
             self.subproject_col.reset()
             self.activity_col.reset()
-            # then destroy the window
+
             win.destroy()
 
         win.protocol("WM_DELETE_WINDOW", on_close)
 
         def on_project_selected_local(project_name):
             subproject_col.refresh(project_name)
+            project_col.refresh_status(project_name)
 
         def on_subproject_selected_local(project_name, subproject_name):
             activity_col.refresh(project_name, subproject_name)
+            subproject_col.refresh_status(project_name, subproject_name)
+
+        # def on_activity_selected_local(project_name, subproject_name, activity_name):
+        #     activity_col.refresh(project_name, subproject_name)
+        #     activity_col.refresh_status(project_name, subproject_name, activity_name)
 
         project_col = ProjectColumn(
             win,
@@ -129,16 +136,21 @@ class App:
             False,
             True,
         )
-
         activity_col.grid(column=2, row=0)
+        side_col = SideColumn(
+            win,
+            self,
+            self.db,
+            project_col,
+            subproject_col,
+            activity_col,
+            self.new_row,
+            error_row,
+            False,
+        )
+        side_col.grid(column=3, row=0)
 
         project_col.refresh()
-
-    def on_project_selected(self, project_name):
-        self.subproject_col.refresh(project_name)
-
-    def on_subproject_selected(self, project, subproject):
-        self.activity_col.refresh(project, subproject)
 
 
 if __name__ == "__main__":
