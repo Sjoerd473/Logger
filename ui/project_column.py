@@ -123,6 +123,8 @@ class ProjectColumn(ttk.Frame):
         else:
             projects = [item["name"] for item in self.db.get_projects()]
         self.p_var.set(projects)
+        self.parent.subproject_col.s_var.set([])
+        self.parent.activity_col.a_var.set([])
 
     def refresh_status(self, project):
         project_status = self.db.get_project_status(project)

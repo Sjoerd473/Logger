@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
-from db.db2 import LoggerDB
+from db.db import LoggerDB
 from ui.activity_column import ActivityColumn
 from ui.error_row import ErrorRow
 from ui.project_column import ProjectColumn

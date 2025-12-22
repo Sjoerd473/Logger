@@ -136,6 +136,7 @@ class SubprojectColumn(ttk.Frame):
         else:
             subs = [item["name"] for item in self.db.get_subs(project)]
         self.s_var.set(subs)
+        self.parent.activity_col.a_var.set([])
 
     def refresh_status(self, project, subproject):
         project_id = self.db.get_project_id(project)
