@@ -182,7 +182,24 @@ class LoggerDB:
             JOIN subprojects s ON logs.subproject_id = s.id
             JOIN activities a ON logs.activity_id = a.id
         """)
+
         return cur.fetchall()
+
+    def get_last_log(self):
+        cur = self.conn.cursor()
+        cur.execute("""
+            SELECT logs.id, p.name AS project_name, s.name AS subproject_name,
+                   a.name AS activity_name, day, month, year,
+                   start_time, end_time, hourly_rate
+            FROM logs
+            JOIN projects p ON logs.project_id = p.id
+            JOIN subprojects s ON logs.subproject_id = s.id
+            JOIN activities a ON logs.activity_id = a.id
+            ORDER BY logs.id DESC
+            LIMIT 1
+        """)
+
+        return cur.fetchone()
 
     # ---------------------------------------------------------
     # INSERTS

@@ -2,7 +2,7 @@ import time
 import tkinter as tk
 from tkinter import messagebox, ttk
 
-from modules.file_writer import print_to_file
+from modules.file_writer import FileWriter
 
 
 class TimerWindow:
@@ -14,6 +14,7 @@ class TimerWindow:
         self.hourly_rate = hourly_rate
         self.new_row = new_row
         self.db = db
+        self.file_writer = FileWriter()
 
         self.timer_window = tk.Toplevel(parent)
         self.timer_window.geometry("-200+60")
@@ -93,7 +94,8 @@ class TimerWindow:
             self.timer_window.destroy()
             self.new_row.end_logger()
             self.db.post_log(self.new_row.post_data())
-            print_to_file(self.db.get_file_data())
+            self.file_writer.print_to_file(self.db.get_last_log())
+            self.file_writer.backup_everything()
         except IndexError:
             messagebox.showerror(
                 "Database Error",

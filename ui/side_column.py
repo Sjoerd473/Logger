@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
 
+from modules.file_writer import FileWriter
 from ui.timer_window import TimerWindow
 
 
@@ -30,6 +31,7 @@ class SideColumn(ttk.Frame):
         self.activity_col = activity_col
         self.error_row = error_row
         self.show_timer_button = show_timer_button
+        self.file_writer = FileWriter()
 
         self.resultsContent = tk.StringVar()
 
@@ -54,6 +56,7 @@ class SideColumn(ttk.Frame):
             self.b_start_btn.grid(
                 column=0, row=7, columnspan=2, rowspan=2, pady=(80, 0)
             )
+
         else:
             self.ps_lbl = ttk.Label(self, text="Project status: ")
             self.ps_lbl.grid(column=0, row=0)
@@ -75,6 +78,11 @@ class SideColumn(ttk.Frame):
             self.as_lbl_status = ttk.Label(self, textvariable=self.activity_col.as_var)
             self.as_lbl_status.grid(column=1, row=2)
 
+            self.b_refresh_csv_btn = tk.Button(
+                self, text="Refresh CSV", command=self.refresh_csv, background="red3"
+            )
+            self.b_refresh_csv_btn.grid(column=0, row=3, rowspan=2, pady=(20, 20))
+
     # -----------------------------
     # SIDE COLUMN LOGIC
     # -----------------------------
@@ -86,6 +94,10 @@ class SideColumn(ttk.Frame):
         if rate < 0:
             raise ValueError("Invalid hourly rate")
         return rate
+
+    def refresh_csv(self):
+        self.file_writer.refresh_file(self.db.get_file_data())
+        self.file_writer.backup_everything()
 
     def start_all(self):
         try:
