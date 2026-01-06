@@ -19,6 +19,7 @@ class FileWriter:
             "Day",
             "Month",
             "Year",
+            "Date",
             "Start time",
             "End time",
             "Total time spent",
@@ -56,7 +57,7 @@ class FileWriter:
 
     def print_to_file(self, data):
         with self.dest_file.open(mode="a", encoding="utf-8", newline="") as file:
-            writer = csv.DictWriter(file, fieldnames=self.HEADERS)
+            writer = csv.DictWriter(file, fieldnames=self.HEADERS, delimiter=';')
 
             # Write header if file is empty
             if file.tell() == 0:
@@ -73,24 +74,29 @@ class FileWriter:
     def _write_row(self, writer, row):
         computed = self._compute_time_fields(row)
 
-        writer.writerow(
-            {
-                "Id": row["id"],
-                "Project": row["project_name"],
-                "Subproject": row["subproject_name"],
-                "Activity": row["activity_name"],
-                "Day": row["day"],
-                "Month": row["month"],
-                "Year": row["year"],
-                "Start time": row["start_time"],
-                "End time": row["end_time"],
-                "Total time spent": computed["total_time"],
-                "Time spent in minutes": computed["minutes"],
-                "Time spend in hours": computed["hours"],
-                "Hourly rate": row["hourly_rate"],
-                "Earnings": computed["earnings"],
-            }
-        )
+        row_dict = {
+            "Id": row["id"],
+            "Project": row["project_name"],
+            "Subproject": row["subproject_name"],
+            "Activity": row["activity_name"],
+            "Day": row["day"],
+            "Month": row["month"],
+            "Year": row["year"],
+            "Date": row["date"],
+            "Start time": row["start_time"],
+            "End time": row["end_time"],
+            "Total time spent": computed["total_time"],
+            "Time spent in minutes": computed["minutes"],
+            "Time spend in hours": computed["hours"],
+            "Hourly rate": row["hourly_rate"],
+            "Earnings": computed["earnings"],
+        }
+
+        for key, value in row_dict.items():
+            if isinstance(value, float):
+                row_dict[key] = str(value).replace('.', ',')
+
+        writer.writerow(row_dict)
 
     def refresh_file(self, data):
         if self.dest_file.exists():

@@ -11,6 +11,7 @@ class Add_row:
         self.day = now.strftime("%d")
         self.month = now.strftime("%B")
         self.year = now.strftime("%Y")
+        self.date = now.strftime("%Y/%m/%d")
         self.start_time = now.strftime("%X")
         self.project = project
         self.hourly_rate = hourly_rate
@@ -29,6 +30,7 @@ class Add_row:
             self.day,
             self.month,
             self.year,
+            self.date,
             self.start_time,
             self.end_time,
             self.hourly_rate,

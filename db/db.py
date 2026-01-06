@@ -54,7 +54,8 @@ class LoggerDB:
             activity_id INTEGER,
             day TEXT NOT NULL,
             month TEXT NOT NULL,
-            year TEXT,
+            year TEXT NOT NULL,
+            date TEXT NOT NULL,
             start_time TEXT NOT NULL,
             end_time TEXT NOT NULL,
             hourly_rate INTEGER DEFAULT 0,
@@ -175,7 +176,7 @@ class LoggerDB:
         cur = self.conn.cursor()
         cur.execute("""
             SELECT logs.id, p.name AS project_name, s.name AS subproject_name,
-                   a.name AS activity_name, day, month, year,
+                   a.name AS activity_name, day, month, year, date,
                    start_time, end_time, hourly_rate
             FROM logs
             JOIN projects p ON logs.project_id = p.id
@@ -189,7 +190,7 @@ class LoggerDB:
         cur = self.conn.cursor()
         cur.execute("""
             SELECT logs.id, p.name AS project_name, s.name AS subproject_name,
-                   a.name AS activity_name, day, month, year,
+                   a.name AS activity_name, day, month, year, date,
                    start_time, end_time, hourly_rate
             FROM logs
             JOIN projects p ON logs.project_id = p.id
@@ -230,12 +231,13 @@ class LoggerDB:
         self.conn.commit()
 
     def post_log(self, data):
+        
         cur = self.conn.cursor()
         cur.execute(
             """
-            INSERT INTO logs (project_id, subproject_id, activity_id, day, month, year,
+            INSERT INTO logs (project_id, subproject_id, activity_id, day, month, year, date,
                               start_time, end_time, hourly_rate)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
             tuple(data),
         )

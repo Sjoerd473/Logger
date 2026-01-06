@@ -109,6 +109,7 @@ class SideColumn(ttk.Frame):
             hourly_rate = self.get_hourly_rate()
             subproject_id = self.db.get_subproject_id(subproject, project_id)
             activity_id = self.db.get_activity_id(project_id, subproject_id, activity)
+            self.b_ety.delete(0, tk.END)
 
             self.new_row.start_logger(
                 project_id, subproject_id, activity_id, hourly_rate
@@ -132,5 +133,5 @@ class SideColumn(ttk.Frame):
         except TypeError:
             messagebox.showerror(
                 "Missing Subproject",
-                "Unable to start a timer without choosing both a project and a subproject",
+                "Unable to start a timer without choosing a project, subproject, and activity",
             )

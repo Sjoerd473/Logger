@@ -180,3 +180,5 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 logger.db
+temp.py
+copy_files.py
