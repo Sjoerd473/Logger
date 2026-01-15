@@ -3,7 +3,7 @@ from tkinter import ttk
 
 from db.db import LoggerDB
 from modules.file_writer import FileWriter
-from ui.row_writer import Add_row #This is in the wrong folder
+from modules.row_writer import Add_row 
 from ui.activity_column import ActivityColumn
 from ui.error_row import ErrorRow
 from ui.project_column import ProjectColumn
@@ -12,8 +12,7 @@ from ui.sub_column import SubprojectColumn
 from ui.modify_window import ModifyWindow
 
 
-# a box to toggle fixed sum instead of hourly rate?
-
+#side_column needs to be split up into different classes
 
 
 class App:
@@ -74,13 +73,13 @@ class App:
         self.modify_btn = ttk.Button(
             self.root, text="Modify projects", command=self.open_modify_window
         )
-        self.modify_btn.grid(column=2, row=2, columnspan=2, sticky="we")
+        self.modify_btn.grid(column=2, row=2, columnspan=2, )
 
     def _build_add_row_to_db_btn(self):
         self.add_row_to_db_btn = ttk.Button(
             self.root, text="Add row to DB", command=self.open_add_to_db_window
         )
-        self.add_row_to_db_btn.grid(column=0, row=2, columnspan=2, sticky="we")
+        self.add_row_to_db_btn.grid(column=0, row=2, columnspan=2,)
  
 
     def open_modify_window(self):

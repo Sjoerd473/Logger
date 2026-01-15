@@ -6,12 +6,13 @@ from modules.file_writer import FileWriter
 
 
 class TimerWindow:
-    def __init__(self, parent, project, subproject, activity, hourly_rate, new_row, db):
+    def __init__(self, parent, project, subproject, activity, hourly_rate, fixed, new_row, db):
         self.parent = parent
         self.project = project
         self.subproject = subproject
         self.activity = activity
         self.hourly_rate = hourly_rate
+        self.fixed = fixed
         self.new_row = new_row
         self.db = db
         self.file_writer = FileWriter()

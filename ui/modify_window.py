@@ -15,7 +15,7 @@ class ModifyWindow:
         self.subproject = subproject
         self.activity = activity
         self.error_row = error_row
-        self.new_row = add_row # This is superfluous?
+        self.new_row = add_row
         self.file_writer = file_writer
         self.db = db
         self.show_update_button = show_update_button

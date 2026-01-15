@@ -39,6 +39,13 @@ class SideColumn(ttk.Frame):
         self.file_writer = FileWriter()
 
         self.resultsContent = tk.StringVar()
+        self.fixedVar = tk.StringVar()
+        self.fixedVar.set("Hourly rate")
+        self.fixedCheck = tk.IntVar()
+
+        self.fixedVar_timer = tk.StringVar()
+        self.fixedVar_timer.set("Hourly rate")
+        self.fixedCheck_timer = tk.IntVar()
 
         self._build_side_column()
 
@@ -49,8 +56,11 @@ class SideColumn(ttk.Frame):
         self.grid(column=3, row=0)
 
         if self.show_timer_button:
-            self.b_lbl_ety = ttk.Label(self, text="Set hourly rate")
+            self.b_lbl_ety = ttk.Label(self, textvariable=self.fixedVar_timer)
             self.b_lbl_ety.grid(column=0, row=1, columnspan=2, pady=5)
+
+            self.b_chk = ttk.Checkbutton(self, text='Fixed sum', variable=self.fixedCheck_timer, onvalue=1, offvalue=0, command=self.set_income_label_timer)
+            self.b_chk.grid(column=3, row=1, padx=(5,0))
 
             self.b_ety = ttk.Entry(self)
             self.b_ety.grid(column=0, row=2, columnspan=2, pady=5)
@@ -110,11 +120,15 @@ class SideColumn(ttk.Frame):
             self.us_ety_end_time = ttk.Entry(self)
             self.us_ety_end_time.grid(column=1, row=6)
 
-            self.us_lbl_hourly_rate = ttk.Label(self, text="Hourly rate")
+            self.us_lbl_hourly_rate = ttk.Label(self, textvariable=self.fixedVar)
             self.us_lbl_hourly_rate.grid(column=1, row=7)
+
 
             self.us_ety_hourly_rate = ttk.Entry(self)
             self.us_ety_hourly_rate.grid(column=1, row=8)
+
+            self.us_chk = ttk.Checkbutton(self, text='Fixed sum', variable=self.fixedCheck, onvalue=1, offvalue=0, command=self.set_income_label)
+            self.us_chk.grid(column=2, row=8, padx=(5,0))
 
             self.us_btn_submit = ttk.Button(self, text="Insert into DB", command=self.insert_into_db)
             self.us_btn_submit.grid(column=1, row=9)
@@ -136,17 +150,33 @@ class SideColumn(ttk.Frame):
     # -----------------------------
     # SIDE COLUMN LOGIC
     # -----------------------------
+    def set_income_label(self):
+        if self.fixedCheck.get() == 0:
+            self.fixedVar.set("Hourly rate")
+        else:
+            self.fixedVar.set("Fixed sum")
+
+    def set_income_label_timer(self):
+        if self.fixedCheck_timer.get() == 0:
+            self.fixedVar_timer.set("Hourly rate")
+        else:
+            self.fixedVar_timer.set("Fixed sum")
+
     def get_hourly_rate(self):
         try:
             if self.show_timer_button:
                 rate = int(self.b_ety.get().strip())
+                fixed = self.fixedCheck_timer.get()
             else:
                 rate = int(self.us_ety_hourly_rate.get().strip())
+                fixed = self.fixedCheck.get()
+                
+
         except ValueError:
             raise ValueError("Invalid hourly rate")
         if rate < 0:
             raise ValueError("Invalid hourly rate")
-        return rate
+        return rate, fixed
     
     def get_date(self):
         date_str = self.us_ety_date.get().strip()
@@ -207,15 +237,15 @@ class SideColumn(ttk.Frame):
     def get_data_to_insert(self):
         date_str, day, month, year = self.get_date()
         start_time, end_time = self.get_time()
-        hourly_rate = self.get_hourly_rate()
+        hourly_rate, fixed = self.get_hourly_rate()
 
-        return date_str, day, month, year, start_time, end_time, hourly_rate
+        return date_str, day, month, year, start_time, end_time, hourly_rate, fixed
             
 
     def insert_into_db(self):
         try:
             project_id, subproject_id, activity_id = self.get_columns_data()
-            date_str, day, month, year, start_time, end_time, hourly_rate = self.get_data_to_insert()
+            date_str, day, month, year, start_time, end_time, hourly_rate, fixed = self.get_data_to_insert()
 
         except ValueError as e:
             messagebox.showerror("Invalid input", str(e))
@@ -227,7 +257,7 @@ class SideColumn(ttk.Frame):
         self.us_ety_start_time.delete(0, tk.END)
         self.us_ety_end_time.delete(0, tk.END)
         self.us_ety_hourly_rate.delete(0, tk.END)
-        self.db.post_log((project_id, subproject_id, activity_id, day, month, year, date_str, start_time, end_time, hourly_rate))
+        self.db.post_log((project_id, subproject_id, activity_id, day, month, year, date_str, start_time, end_time, hourly_rate, fixed))
         self.file_writer.refresh_file(self.db.get_file_data())
         self.file_writer.backup_everything()
     
@@ -241,11 +271,11 @@ class SideColumn(ttk.Frame):
             project_id = self.db.get_project_id(project)
             subproject_id = self.db.get_subproject_id(subproject, project_id)
             activity_id = self.db.get_activity_id(project_id, subproject_id, activity)
-            hourly_rate = self.get_hourly_rate()
+            hourly_rate, fixed = self.get_hourly_rate()
             self.b_ety.delete(0, tk.END)
 
             self.new_row.start_logger(
-                project_id, subproject_id, activity_id, hourly_rate
+                project_id, subproject_id, activity_id, hourly_rate, fixed
             )
 
             TimerWindow(
@@ -254,6 +284,7 @@ class SideColumn(ttk.Frame):
                 subproject,
                 activity,
                 hourly_rate,
+                fixed,
                 self.new_row,
                 self.db,
             )

@@ -5,7 +5,7 @@ from datetime import datetime
 class Add_row:
     def __init__(self): ...
 
-    def start_logger(self, project, subproject, activity, hourly_rate):
+    def start_logger(self, project, subproject, activity, hourly_rate, fixed):
         now = datetime.now()
 
         self.day = now.strftime("%d")
@@ -17,6 +17,7 @@ class Add_row:
         self.hourly_rate = hourly_rate
         self.subproject = subproject
         self.activity = activity
+        self.fixed = fixed
 
     def end_logger(self):
         now = datetime.now()
@@ -34,4 +35,5 @@ class Add_row:
             self.start_time,
             self.end_time,
             self.hourly_rate,
+            self.fixed
         ]

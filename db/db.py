@@ -7,6 +7,7 @@ class LoggerDB:
         self.conn.row_factory = sqlite3.Row
         self.conn.execute("PRAGMA foreign_keys = ON;")
         self._create_tables_if_missing()
+        self._migrate_logs_table()
 
     def __enter__(self):
         return self
@@ -59,6 +60,7 @@ class LoggerDB:
             start_time TEXT NOT NULL,
             end_time TEXT NOT NULL,
             hourly_rate INTEGER DEFAULT 0,
+            fixed INTEGER NOT NULL DEFAULT 0 CHECK (fixed IN (0,1)),
             FOREIGN KEY(project_id) REFERENCES projects(id),
             FOREIGN KEY(subproject_id) REFERENCES subprojects(id),
             FOREIGN KEY(activity_id) REFERENCES activities(id)
@@ -66,6 +68,19 @@ class LoggerDB:
         """)
 
         self.conn.commit()
+
+    def _migrate_logs_table(self):
+        cur = self.conn.cursor()
+
+    # Check if 'fixed' column exists
+        cur.execute("PRAGMA table_info(logs)")
+        columns = [row[1] for row in cur.fetchall()]
+
+        if "fixed" not in columns:
+            cur.execute("ALTER TABLE logs ADD COLUMN fixed INTEGER NOT NULL DEFAULT 0")
+
+        self.conn.commit()
+
 
     # ---------------------------------------------------------
     # PROJECTS
@@ -177,7 +192,7 @@ class LoggerDB:
         cur.execute("""
             SELECT logs.id, p.name AS project_name, s.name AS subproject_name,
                    a.name AS activity_name, day, month, year, date,
-                   start_time, end_time, hourly_rate
+                   start_time, end_time, hourly_rate, fixed
             FROM logs
             JOIN projects p ON logs.project_id = p.id
             JOIN subprojects s ON logs.subproject_id = s.id
@@ -192,7 +207,7 @@ class LoggerDB:
         cur.execute("""
             SELECT logs.id, p.name AS project_name, s.name AS subproject_name,
                    a.name AS activity_name, day, month, year, date,
-                   start_time, end_time, hourly_rate
+                   start_time, end_time, hourly_rate, fixed
             FROM logs
             JOIN projects p ON logs.project_id = p.id
             JOIN subprojects s ON logs.subproject_id = s.id
@@ -237,8 +252,8 @@ class LoggerDB:
         cur.execute(
             """
             INSERT INTO logs (project_id, subproject_id, activity_id, day, month, year, date,
-                              start_time, end_time, hourly_rate)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                              start_time, end_time, hourly_rate, fixed)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
             tuple(data),
         )

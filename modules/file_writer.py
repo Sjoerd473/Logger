@@ -45,8 +45,10 @@ class FileWriter:
         delta = end - start
         minutes = int(delta.total_seconds() / 60)
         hours = round(minutes / 60, 2)
-
-        earnings = round(hours * row["hourly_rate"], 2)
+        if row["fixed"] == 1:
+            earnings = row["hourly_rate"]
+        else:
+            earnings = round(hours * row["hourly_rate"], 2)
 
         return {
             "total_time": str(delta),
