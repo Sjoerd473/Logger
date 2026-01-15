@@ -14,6 +14,7 @@ class ProjectColumn(ttk.Frame):
         error_row,
         show_add_controls=True,
         show_all=False,
+        show_toggle_controls=False
     ):
         super().__init__(master, padding=(12, 12, 12, 12))
         self.parent = parent
@@ -21,6 +22,7 @@ class ProjectColumn(ttk.Frame):
         self.on_project_selected = on_project_selected
         self.error_row = error_row
         self.show_add_controls = show_add_controls
+        self.show_toggle_controls = show_toggle_controls
         self.show_all = show_all
 
         self._build_project_column()
@@ -32,7 +34,7 @@ class ProjectColumn(ttk.Frame):
     def _build_project_column(self):
         self.grid(column=0, row=0, sticky="nwes")
 
-        self.p_var = tk.StringVar()
+        self.p_var = tk.Variable()
         self.ps_var = tk.StringVar()
 
         self.p_lbl = ttk.Label(self, text="Project:")
@@ -50,7 +52,7 @@ class ProjectColumn(ttk.Frame):
 
             self.pe_btn = ttk.Button(self, text="Add", command=self.add_project)
             self.pe_btn.grid(column=0, row=8)
-        else:
+        elif self.show_toggle_controls:
             self.su_lbl = ttk.Label(self, text="Toggle project")
             self.su_lbl.grid(column=0, row=7)
 
@@ -122,7 +124,7 @@ class ProjectColumn(ttk.Frame):
             projects = [item["name"] for item in self.db.get_all_projects()]
         else:
             projects = [item["name"] for item in self.db.get_projects()]
-        self.p_var.set(projects)
+        self.p_var.set(projects) # type: ignore
         self.parent.subproject_col.s_var.set([])
         self.parent.activity_col.a_var.set([])
 

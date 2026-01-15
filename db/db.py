@@ -182,6 +182,7 @@ class LoggerDB:
             JOIN projects p ON logs.project_id = p.id
             JOIN subprojects s ON logs.subproject_id = s.id
             JOIN activities a ON logs.activity_id = a.id
+            ORDER BY date
         """)
 
         return cur.fetchall()

@@ -1,8 +1,11 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
+from datetime import datetime
+import re
 
 from modules.file_writer import FileWriter
 from ui.timer_window import TimerWindow
+from modules.month_data import MONTHS
 
 
 # needs to get:
@@ -21,6 +24,7 @@ class SideColumn(ttk.Frame):
         new_row,
         error_row,
         show_timer_button=True,
+        show_update_button=False
     ):
         super().__init__(master, padding=(12, 12, 12, 12))
         self.parent = parent
@@ -31,6 +35,7 @@ class SideColumn(ttk.Frame):
         self.activity_col = activity_col
         self.error_row = error_row
         self.show_timer_button = show_timer_button
+        self.show_update_button= show_update_button
         self.file_writer = FileWriter()
 
         self.resultsContent = tk.StringVar()
@@ -57,7 +62,7 @@ class SideColumn(ttk.Frame):
                 column=0, row=7, columnspan=2, rowspan=2, pady=(80, 0)
             )
 
-        else:
+        elif self.show_update_button:
             self.ps_lbl = ttk.Label(self, text="Project status: ")
             self.ps_lbl.grid(column=0, row=0)
 
@@ -82,22 +87,150 @@ class SideColumn(ttk.Frame):
                 self, text="Refresh CSV", command=self.refresh_csv, background="red3"
             )
             self.b_refresh_csv_btn.grid(column=0, row=3, rowspan=2, pady=(20, 20))
+        else:
+            ...
+            # self.us_lbl_title = ttk.Label(self, text="<-- Select a project/subproject/activity")
+            # self.us_lbl_title.grid(column=0, row=0, columnspan=3, pady=(20,20), sticky='we')
+
+            self.us_lbl_date = ttk.Label(self, text="Date: YYYY/MM/DD ")
+            self.us_lbl_date.grid(column=1, row=1)
+            
+            self.us_ety_date = ttk.Entry(self)
+            self.us_ety_date.grid(column=1, row=2)
+
+            self.us_lbl_start_time = ttk.Label(self, text="Start time: HH:MM:SS")
+            self.us_lbl_start_time.grid(column=1, row = 3)
+
+            self.us_ety_start_time = ttk.Entry(self)
+            self.us_ety_start_time.grid(column=1, row=4)
+
+            self.us_lbl_end_time = ttk.Label(self, text="End time: HH:MM:SS")
+            self.us_lbl_end_time.grid(column=1, row = 5)
+
+            self.us_ety_end_time = ttk.Entry(self)
+            self.us_ety_end_time.grid(column=1, row=6)
+
+            self.us_lbl_hourly_rate = ttk.Label(self, text="Hourly rate")
+            self.us_lbl_hourly_rate.grid(column=1, row=7)
+
+            self.us_ety_hourly_rate = ttk.Entry(self)
+            self.us_ety_hourly_rate.grid(column=1, row=8)
+
+            self.us_btn_submit = ttk.Button(self, text="Insert into DB", command=self.insert_into_db)
+            self.us_btn_submit.grid(column=1, row=9)
+            # label: select from columns
+            # label + entry: enter date
+            # label + entry x2: enter start and stop time
+            # label + entry: enter hourly rate
+            # button: insert into DB
+            # Get the three IDs from the names in the columns
+            # User inserts a date in DD/MM/YYYY format
+            # User inserts a time in HH:MM:SS format
+            # User inserts an hourly rate in number format
+            # These get checked and inserted into a db.post_log call in the form of a list or tuple (data1, data2, etc.)
+            # INSERT INTO logs 
+            # (project_id, subproject_id, activity_id, day, month, year, date, start_time, end_time, hourly_rate)
+            # VALUES (1,1,1,14,"January", 2026, "2026/01/06", "10:30:00", "11:00:00", 30);
+ 
 
     # -----------------------------
     # SIDE COLUMN LOGIC
     # -----------------------------
     def get_hourly_rate(self):
         try:
-            rate = int(self.b_ety.get().strip())
+            if self.show_timer_button:
+                rate = int(self.b_ety.get().strip())
+            else:
+                rate = int(self.us_ety_hourly_rate.get().strip())
         except ValueError:
             raise ValueError("Invalid hourly rate")
         if rate < 0:
             raise ValueError("Invalid hourly rate")
         return rate
+    
+    def get_date(self):
+        date_str = self.us_ety_date.get().strip()
+
+        if not re.match(r"^\d{4}/\d{2}/\d{2}$", date_str):
+            raise ValueError("Date must be in YYYY/MM/DD format")
+
+        try:
+            dt = datetime.strptime(date_str, "%Y/%m/%d")
+        except ValueError:
+            raise ValueError("Invalid calendar date")
+
+    # Extract components
+        year = dt.year
+        month = MONTHS[str(dt.month)]
+        day = dt.day
+
+        return date_str, day, month, year
+
+
+
+    def get_time(self):
+        start_time = self.us_ety_start_time.get().strip()
+        end_time = self.us_ety_end_time.get().strip()
+
+        time_pattern = r"^\d{2}:\d{2}:\d{2}$"
+
+        if not re.match(time_pattern, start_time) or not re.match(time_pattern, end_time):
+            raise ValueError("Time must be in HH:MM:SS format")
+
+        try:
+            datetime.strptime(start_time, "%H:%M:%S")
+            datetime.strptime(end_time, "%H:%M:%S")
+        except ValueError:
+            raise ValueError("Invalid time value")
+
+        return start_time, end_time
+
+
 
     def refresh_csv(self):
         self.file_writer.refresh_file(self.db.get_file_data())
         self.file_writer.backup_everything()
+
+    def get_columns_data(self):
+        project = self.project_col.get_selected_project()
+        subproject = self.subproject_col.get_selected_subproject()
+        activity = self.activity_col.get_selected_activity()
+       
+
+
+        project_id = self.db.get_project_id(project)
+        subproject_id = self.db.get_subproject_id(subproject, project_id)
+        activity_id = self.db.get_activity_id(project_id, subproject_id, activity)
+
+        return project_id, subproject_id, activity_id
+    
+    def get_data_to_insert(self):
+        date_str, day, month, year = self.get_date()
+        start_time, end_time = self.get_time()
+        hourly_rate = self.get_hourly_rate()
+
+        return date_str, day, month, year, start_time, end_time, hourly_rate
+            
+
+    def insert_into_db(self):
+        try:
+            project_id, subproject_id, activity_id = self.get_columns_data()
+            date_str, day, month, year, start_time, end_time, hourly_rate = self.get_data_to_insert()
+
+        except ValueError as e:
+            messagebox.showerror("Invalid input", str(e))
+            return
+
+        except TypeError:
+            messagebox.showerror("Missing selection", "Please select a project, subproject, and activity")
+            return
+        self.us_ety_start_time.delete(0, tk.END)
+        self.us_ety_end_time.delete(0, tk.END)
+        self.us_ety_hourly_rate.delete(0, tk.END)
+        self.db.post_log((project_id, subproject_id, activity_id, day, month, year, date_str, start_time, end_time, hourly_rate))
+        self.file_writer.refresh_file(self.db.get_file_data())
+        self.file_writer.backup_everything()
+    
 
     def start_all(self):
         try:
@@ -106,9 +239,9 @@ class SideColumn(ttk.Frame):
             activity = self.activity_col.get_selected_activity()
 
             project_id = self.db.get_project_id(project)
-            hourly_rate = self.get_hourly_rate()
             subproject_id = self.db.get_subproject_id(subproject, project_id)
             activity_id = self.db.get_activity_id(project_id, subproject_id, activity)
+            hourly_rate = self.get_hourly_rate()
             self.b_ety.delete(0, tk.END)
 
             self.new_row.start_logger(
@@ -135,3 +268,6 @@ class SideColumn(ttk.Frame):
                 "Missing Subproject",
                 "Unable to start a timer without choosing a project, subproject, and activity",
             )
+    # -----------------------------
+    # SIDE COLUMN HELPER FUNCTIONS
+    # -----------------------------

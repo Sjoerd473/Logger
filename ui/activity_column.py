@@ -15,6 +15,7 @@ class ActivityColumn(ttk.Frame):
         error_row,
         show_add_controls=True,
         show_all=False,
+        show_toggle_controls = False
     ):
         super().__init__(master, padding=(12, 12, 12, 12))
         self.parent = parent
@@ -23,9 +24,10 @@ class ActivityColumn(ttk.Frame):
         self.subproject_col = sub_col
         self.error_row = error_row
         self.show_add_controls = show_add_controls
+        self.show_toggle_controls = show_toggle_controls
         self.show_all = show_all
 
-        self.a_var = tk.StringVar()
+        self.a_var = tk.Variable()
         self.as_var = tk.StringVar()
 
         self._build_activity_column()
@@ -53,7 +55,7 @@ class ActivityColumn(ttk.Frame):
 
             self.ae_btn = ttk.Button(self, text="Add", command=self.add_activity)
             self.ae_btn.grid(column=0, row=9)
-        else:
+        elif self.show_toggle_controls:
             self.au_lbl = ttk.Label(self, text="Toggle activity")
             self.au_lbl.grid(column=0, row=7)
 
@@ -138,7 +140,7 @@ class ActivityColumn(ttk.Frame):
             acts = [item["name"] for item in self.db.get_all_acts(project, subproject)]
         else:
             acts = [item["name"] for item in self.db.get_acts(project, subproject)]
-        self.a_var.set(acts)
+        self.a_var.set(acts) # type: ignore
 
     def refresh_status(self, project, subproject, activity):
         project_id = self.db.get_project_id(project)
@@ -153,4 +155,4 @@ class ActivityColumn(ttk.Frame):
         self.as_var.set(activity_status)
 
     def reset(self):
-        self.a_var.set([])
+        self.a_var.set([]) # type: ignore

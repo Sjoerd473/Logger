@@ -3,18 +3,17 @@ from tkinter import ttk
 
 from db.db import LoggerDB
 from modules.file_writer import FileWriter
+from ui.row_writer import Add_row #This is in the wrong folder
 from ui.activity_column import ActivityColumn
 from ui.error_row import ErrorRow
 from ui.project_column import ProjectColumn
-from ui.row_writer import Add_row
 from ui.side_column import SideColumn
 from ui.sub_column import SubprojectColumn
+from ui.modify_window import ModifyWindow
 
-# dsn = "dbname=logger user=postgres password=megablaat"
 
+# a box to toggle fixed sum instead of hourly rate?
 
-# layout sizing and positioning,
-# correct refresh on add buttons
 
 
 class App:
@@ -61,6 +60,7 @@ class App:
         self.error_row.grid(column=0, row=10)
 
         self._build_modify_btn()
+        self._build_add_row_to_db_btn()
 
         self.project_col.refresh()
 
@@ -74,85 +74,21 @@ class App:
         self.modify_btn = ttk.Button(
             self.root, text="Modify projects", command=self.open_modify_window
         )
-        self.modify_btn.grid(column=1, row=2, columnspan=2, sticky="we")
+        self.modify_btn.grid(column=2, row=2, columnspan=2, sticky="we")
+
+    def _build_add_row_to_db_btn(self):
+        self.add_row_to_db_btn = ttk.Button(
+            self.root, text="Add row to DB", command=self.open_add_to_db_window
+        )
+        self.add_row_to_db_btn.grid(column=0, row=2, columnspan=2, sticky="we")
+ 
 
     def open_modify_window(self):
-        win = tk.Toplevel(self.root)
-        win.title("Project Settings")
-        win.geometry("700x250+200+460")
-
-        error_row = ErrorRow(win)
-        error_row.grid(column=2, row=5, columnspan=3)
-
-        def on_close():
-            self.project_col.refresh()
-            self.subproject_col.reset()
-            self.activity_col.reset()
-
-            win.destroy()
-
-        win.protocol("WM_DELETE_WINDOW", on_close)
-
-        def on_project_selected_local(project_name):
-            subproject_col.refresh(project_name)
-            project_col.refresh_status(project_name)
-
-        def on_subproject_selected_local(project_name, subproject_name):
-            activity_col.refresh(project_name, subproject_name)
-            subproject_col.refresh_status(project_name, subproject_name)
-
-        # def on_activity_selected_local(project_name, subproject_name, activity_name):
-        #     activity_col.refresh(project_name, subproject_name)
-        #     activity_col.refresh_status(project_name, subproject_name, activity_name)
-
-        project_col = ProjectColumn(
-            win,
-            self,
-            self.db,
-            on_project_selected_local,
-            error_row,
-            False,  # hides buttons
-            True,  # toggle for all projects from DB
-        )
-        project_col.grid(column=0, row=0)
-
-        subproject_col = SubprojectColumn(
-            win,
-            self,
-            self.db,
-            project_col,
-            on_subproject_selected_local,
-            error_row,
-            False,
-            True,
-        )
-        subproject_col.grid(column=1, row=0)
-
-        activity_col = ActivityColumn(
-            win,
-            self,
-            self.db,
-            project_col,
-            subproject_col,
-            error_row,
-            False,
-            True,
-        )
-        activity_col.grid(column=2, row=0)
-        side_col = SideColumn(
-            win,
-            self,
-            self.db,
-            project_col,
-            subproject_col,
-            activity_col,
-            self.new_row,
-            error_row,
-            False,
-        )
-        side_col.grid(column=3, row=0)
-
-        project_col.refresh()
+       ModifyWindow(root, self, self.project_col, self.subproject_col, self.activity_col, self.error_row, self.new_row, self.file_writer, self.db)
+    
+    def open_add_to_db_window(self):
+          ModifyWindow(root, self, self.project_col, self.subproject_col, self.activity_col, self.error_row, self.new_row, self.file_writer, self.db, False, False)
+    
 
 
 if __name__ == "__main__":

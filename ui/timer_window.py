@@ -22,7 +22,7 @@ class TimerWindow:
         self.running = True
         self.start_time = time.time()
 
-        self._build_ui()
+        self._build_timer_frame()
         self._update_timer()
         self.timer_window.protocol("WM_DELETE_WINDOW", self.stop_timer)
 
@@ -34,8 +34,6 @@ class TimerWindow:
             self.timer_txt.config(text=f"{hours:02}:{minutes:02}:{seconds:02}")
             self.timer_window.after(1000, self._update_timer)
 
-    def _build_ui(self):
-        self._build_timer_frame()
 
     def _build_timer_frame(self):
         # Frame

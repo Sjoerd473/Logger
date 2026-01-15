@@ -15,6 +15,7 @@ class SubprojectColumn(ttk.Frame):
         error_row,
         show_add_controls=True,
         show_all=False,
+        show_toggle_controls = False
     ):
         super().__init__(master, padding=(12, 12, 12, 12))
         self.parent = parent
@@ -23,9 +24,10 @@ class SubprojectColumn(ttk.Frame):
         self.on_subproject_selected = on_subproject_selected
         self.error_row = error_row
         self.show_add_controls = show_add_controls
+        self.show_toggle_controls = show_toggle_controls
         self.show_all = show_all
 
-        self.s_var = tk.StringVar()
+        self.s_var = tk.Variable()
         self.ss_var = tk.StringVar()
 
         self._build_subproject_column()
@@ -52,7 +54,7 @@ class SubprojectColumn(ttk.Frame):
 
             self.se_btn = ttk.Button(self, text="Add", command=self.add_subproject)
             self.se_btn.grid(column=0, row=9)
-        else:
+        elif self.show_toggle_controls:
             self.su_lbl = ttk.Label(self, text="Toggle subproject")
             self.su_lbl.grid(column=0, row=7)
 
@@ -135,7 +137,7 @@ class SubprojectColumn(ttk.Frame):
             subs = [item["name"] for item in self.db.get_all_subs(project)]
         else:
             subs = [item["name"] for item in self.db.get_subs(project)]
-        self.s_var.set(subs)
+        self.s_var.set(subs) # type: ignore
         self.parent.activity_col.a_var.set([])
 
     def refresh_status(self, project, subproject):
@@ -148,4 +150,4 @@ class SubprojectColumn(ttk.Frame):
         self.ss_var.set(subproject_status)
 
     def reset(self):
-        self.s_var.set([])
+        self.s_var.set([]) # type: ignore
