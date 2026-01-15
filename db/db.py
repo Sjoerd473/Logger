@@ -191,13 +191,13 @@ class LoggerDB:
         cur = self.conn.cursor()
         cur.execute("""
             SELECT logs.id, p.name AS project_name, s.name AS subproject_name,
-                   a.name AS activity_name, day, month, year, date,
+                   a.name AS activity_name,month, year, date,
                    start_time, end_time, hourly_rate, fixed
             FROM logs
             JOIN projects p ON logs.project_id = p.id
             JOIN subprojects s ON logs.subproject_id = s.id
             JOIN activities a ON logs.activity_id = a.id
-            ORDER BY date
+            ORDER BY date, start_time
         """)
 
         return cur.fetchall()
@@ -206,7 +206,7 @@ class LoggerDB:
         cur = self.conn.cursor()
         cur.execute("""
             SELECT logs.id, p.name AS project_name, s.name AS subproject_name,
-                   a.name AS activity_name, day, month, year, date,
+                   a.name AS activity_name, month, year, date,
                    start_time, end_time, hourly_rate, fixed
             FROM logs
             JOIN projects p ON logs.project_id = p.id

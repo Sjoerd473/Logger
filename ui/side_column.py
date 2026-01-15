@@ -132,20 +132,7 @@ class SideColumn(ttk.Frame):
 
             self.us_btn_submit = ttk.Button(self, text="Insert into DB", command=self.insert_into_db)
             self.us_btn_submit.grid(column=1, row=9)
-            # label: select from columns
-            # label + entry: enter date
-            # label + entry x2: enter start and stop time
-            # label + entry: enter hourly rate
-            # button: insert into DB
-            # Get the three IDs from the names in the columns
-            # User inserts a date in DD/MM/YYYY format
-            # User inserts a time in HH:MM:SS format
-            # User inserts an hourly rate in number format
-            # These get checked and inserted into a db.post_log call in the form of a list or tuple (data1, data2, etc.)
-            # INSERT INTO logs 
-            # (project_id, subproject_id, activity_id, day, month, year, date, start_time, end_time, hourly_rate)
-            # VALUES (1,1,1,14,"January", 2026, "2026/01/06", "10:30:00", "11:00:00", 30);
- 
+       
 
     # -----------------------------
     # SIDE COLUMN LOGIC
