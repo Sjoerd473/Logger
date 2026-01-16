@@ -8,7 +8,7 @@ from ui.side_column import SideColumn
 from ui.sub_column import SubprojectColumn
 
 class ModifyWindow:
-    def __init__(self, root, parent, project, subproject, activity, error_row, add_row, file_writer, db, show_update_button=True, show_toggle_controls=True, show_add_to_db_menu=False):
+    def __init__(self, root, parent, project, subproject, activity, error_row, add_row, file_writer, db,show_add_project_buttons=False, show_update_button=True, show_toggle_controls=True, show_add_to_db_menu=False):
         self.root = root
         self.parent = parent
         self.project = project
@@ -18,11 +18,12 @@ class ModifyWindow:
         self.new_row = add_row
         self.file_writer = file_writer
         self.db = db
+        self.show_add_project_buttons = show_add_project_buttons
         self.show_update_button = show_update_button
         self.show_toggle_controls = show_toggle_controls
 
         self.modify_window = tk.Toplevel(self.root)
-        self.modify_window.geometry("700x250+200+460")
+        self.modify_window.geometry("700x300+200+460")
         self.modify_window.title("Modify data")
 
         self._build_modify_frame()
@@ -35,7 +36,7 @@ class ModifyWindow:
             self.db,
             self.on_project_selected_local,
             self.error_row,
-            False,  # hides buttons
+            self.show_add_project_buttons,  # hides buttons
             True,  # toggle for all projects from DB
             self.show_toggle_controls
         )
@@ -48,7 +49,7 @@ class ModifyWindow:
             self.project_col,
             self.on_subproject_selected_local,
             self.error_row,
-            False,
+            self.show_add_project_buttons,
             True,
             self.show_toggle_controls
         )
@@ -61,7 +62,7 @@ class ModifyWindow:
             self.project_col,
             self.subproject_col,
             self.error_row,
-            False,
+            self.show_add_project_buttons,
             True,
             self.show_toggle_controls
         )

@@ -104,7 +104,7 @@ class FileWriter:
         self.print_to_file(data)
 
     def backup_db(self, dst, timestamp):
-        src = Path("logger.db")
+        src = Path.home() / "logger_logs" / "logger.db"
         file_dst = dst / f"logger_backup_{timestamp}.db"
         shutil.copy(src, file_dst)
 

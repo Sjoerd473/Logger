@@ -4,6 +4,8 @@ from tkinter import ttk
 from db.db import LoggerDB
 from modules.file_writer import FileWriter
 from modules.row_writer import Add_row 
+from modules.random_title import random_title
+
 from ui.activity_column import ActivityColumn
 from ui.error_row import ErrorRow
 from ui.project_column import ProjectColumn
@@ -12,7 +14,10 @@ from ui.sub_column import SubprojectColumn
 from ui.modify_window import ModifyWindow
 
 
+
 #side_column needs to be split up into different classes
+
+
 
 
 class App:
@@ -23,7 +28,7 @@ class App:
         self.file_writer = FileWriter()
         self.error_row = ErrorRow(root)
         self.root.geometry("+200+60")
-        self.root.title("Logger")
+        self.root.title(f"Logger - {random_title()}")
 
         self.error_var = tk.StringVar()
 
@@ -86,7 +91,7 @@ class App:
        ModifyWindow(root, self, self.project_col, self.subproject_col, self.activity_col, self.error_row, self.new_row, self.file_writer, self.db)
     
     def open_add_to_db_window(self):
-          ModifyWindow(root, self, self.project_col, self.subproject_col, self.activity_col, self.error_row, self.new_row, self.file_writer, self.db, False, False)
+          ModifyWindow(root, self, self.project_col, self.subproject_col, self.activity_col, self.error_row, self.new_row, self.file_writer, self.db, True, False, False)
     
 
 

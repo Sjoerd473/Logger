@@ -1,8 +1,16 @@
+from pathlib import Path
 import sqlite3
 
-
 class LoggerDB:
-    def __init__(self, path="logger.db"):
+    def __init__(self, path=None):
+        # Build the folder path
+        self.dest_folder = Path.home() / "logger_logs"
+        self.dest_folder.mkdir(parents=True, exist_ok=True)
+
+        # Build the DB path
+        if path is None:
+            path = self.dest_folder / "logger.db"
+
         self.conn = sqlite3.connect(path)
         self.conn.row_factory = sqlite3.Row
         self.conn.execute("PRAGMA foreign_keys = ON;")
@@ -14,6 +22,7 @@ class LoggerDB:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.conn.close()
+
 
     # ---------------------------------------------------------
     # TABLE CREATION
